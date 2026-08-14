@@ -6,12 +6,13 @@
   "description": "กองกำลังพิทักษ์ตัวสะกด (Monster Speller) — เกมยิงมอนสเตอร์เรียนรู้มาตราตัวสะกดภาษาไทย",
   "scripts": {
     "dev": "vite",
-    "build": "vue-tsc --noEmit && vite build",
+    "build": "npm run check:assets && vue-tsc --noEmit && vite build",
     "preview": "vite preview",
     "test": "npm run test:unit && npm run test:e2e",
     "test:unit": "vitest run",
     "test:e2e": "playwright test",
-    "typecheck": "vue-tsc --noEmit"
+    "typecheck": "vue-tsc --noEmit",
+    "check:assets": "node scripts/check-assets.mjs"
   },
   "dependencies": {
     "pinia": "^3.0.3",

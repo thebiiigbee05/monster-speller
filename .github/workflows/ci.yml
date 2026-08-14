@@ -33,6 +33,9 @@ jobs:
       - name: typecheck (vue-tsc)
         run: npm run typecheck
 
+      - name: ตรวจสินทรัพย์ที่เกมโหลด (check-assets.mjs)
+        run: npm run check:assets
+
       - name: unit tests (Vitest)
         run: npm run test:unit
 

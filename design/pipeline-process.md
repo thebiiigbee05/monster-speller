@@ -117,14 +117,15 @@
 | build-preview.mjs / generate-*.mjs | 3-5 | สร้าง sprite/พื้นหลัง/พรีวิว |
 | **pipeline.mjs** ⭐ | 4 | **1 คำสั่ง: ตรวจ+ตัด 4 sheet parallel → ตารางสรุป → หยุดถ้ามี fail** |
 | **check-manifests.py** | 5 | ตรวจ manifest ทั้งหมด: schema/ไฟล์มีจริง/จำนวนเฟรมตรง (กันเกมโหลดพัง) |
-| **CI (`.github/workflows/ci.yml`)** | 5 | ทุก push/PR: typecheck + unit + e2e + check-links + check-manifests อัตโนมัติ |
+| **CI (`.github/workflows/ci.yml`)** | 5 | ทุก push/PR: typecheck + unit + e2e + check-links + check-manifests + check-assets อัตโนมัติ |
+| **asset-manifest-validator (`scripts/check-assets.mjs`)** | 5 | สแกนโค้ดเกม → ตรวจ asset ที่โหลดจริง (schema/ไฟล์/เฟรม) — รันก่อน build |
 | Kanban (GitHub Projects, บท 9) | ทุกระยะ | WIP limits + การ์ด |
 
 ### 🔜 ควรสร้างถัดไป (ช่องว่าง — เรียงตามมูลค่า)
 | เครื่องมือ | ปัญหาที่แก้ | มูลค่า |
 |---|---|---|
 | ~~`pipeline.mjs`~~ ✅ สร้างแล้ว | — | — |
-| ~~asset-manifest-validator~~ ✅ สร้างแล้ว (`tests/check-manifests.py`) | — | — |
+| ~~asset-manifest-validator~~ ✅ สร้างแล้ว 2 ชั้น: `tests/check-manifests.py` (ทุก manifest) + `scripts/check-assets.mjs` (ที่เกมโหลดจริง, ก่อน build) | — | — |
 | ~~CI (GitHub Actions)~~ ✅ สร้างแล้ว (`.github/workflows/ci.yml`) | — | — |
 | `qa-dashboard.html` — รวมผลตรวจสินทรัพย์ทั้งหมดในหน้าเดียว | ภาพรวม QA กระจัดกระจาย | กลาง |
 | ตัวเก็บสถิติการเล่น (localStorage → report) | วงวนเรียนรู้ (ระยะหลัง SHIP) | กลาง |
