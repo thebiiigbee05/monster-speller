@@ -73,6 +73,12 @@ async function main() {
 
   console.log(`🧪 pipeline: ตรวจ + ตัดเฟรม ${plans.length} sheet (parallel) — ${PY}\n`);
 
+  // ล้าง out-dir เดิมก่อนรัน (ผลลัพธ์มาจากสคริปต์ล้วน ๆ — กันเฟรมเก่าตกค้าง
+  // เมื่อรอบนี้ได้เฟรมน้อยกว่ารอบก่อน เช่น walker 11 → 5 เฟรม)
+  for (const p of plans) {
+    fs.rmSync(path.join(OUT_DIR, p.name), { recursive: true, force: true });
+  }
+
   const results = await Promise.all(plans.map(async (p) => {
     const args = [
       SCRIPT,
