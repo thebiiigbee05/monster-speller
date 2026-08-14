@@ -230,6 +230,23 @@ def is_near(c1, c2, tol=10):
     return (abs(c1[0] - c2[0]) <= tol and abs(c1[1] - c2[1]) <= tol
             and abs(c1[2] - c2[2]) <= tol)
 
+
+def hue_sat(r, g, b):
+    """hue (0-360) + saturation (0-1) แบบ HSV โดยประมาณ — ใช้แยก
+    "เงา" (สีเดียวกันกับ bg แต่เข้ม) ออกจาก "เนื้อตัว" (สีต่าง hue)"""
+    mx, mn = max(r, g, b), min(r, g, b)
+    d = mx - mn
+    sat = (d / mx) if mx else 0.0
+    if d == 0:
+        return 0.0, sat
+    if mx == r:
+        h = 60 * (((g - b) / d) % 6)
+    elif mx == g:
+        h = 60 * ((b - r) / d + 2)
+    else:
+        h = 60 * ((r - g) / d + 4)
+    return h, sat
+
 def is_clear(img, x, y, tol=8):
     return img.getpixel((x, y))[3] <= tol
 
@@ -446,20 +463,20 @@ def check_sheet(img, bg_rgb, expect=None, tol=28, expected_grid=None):
             if touching:
                 touch.append((x0, y0, x1, y1))
             # เงาตกค้าง: ตรวจทั้งครึ่งล่างของเซลล์จากภาพต้นฉบับ — พิกเซลที่
-            # (ก) สว่างรวม (luminance) ต่ำกว่าพื้นมาก และ
-            # (ข) สีใกล้ bg (hue เดียวกัน — เงาเป็น bg เข้ม ไม่ใช่สีตัว)
-            # เงาเขียวเข้ม (0,110,0) ผ่านทั้งคู่ แต่ตัวเขียวสด (30,200,90)
-            # มีลูมสูง + ต่างจาก bg ชัด → ไม่ผ่าน
+            # (ก) สว่างรวมต่ำกว่าพื้นมาก และ
+            # (ข) hue + saturation ใกล้ bg (เงา = สีเดียวกันแต่เข้ม;
+            #     เนื้อตัว = สีต่าง hue เช่น โครง #1f8b0d ของวอล์กเกอร์)
+            bg_h, bg_s = hue_sat(*bg_rgb)
             bg_lum = sum(bg_rgb)
             for yy in range(y0 + (y1 - y0) // 2, y1 + 1):
                 for xx in range(x0, x1 + 1):
                     pr, pg, pb = src[xx, yy][:3]
                     lum = pr + pg + pb
-                    darker = lum < bg_lum - 120  # เข้มกว่าพื้นชัดเจน
-                    near_bg = (abs(pr - bg_rgb[0]) <= 160
-                               and abs(pg - bg_rgb[1]) <= 160
-                               and abs(pb - bg_rgb[2]) <= 160)
-                    if darker and near_bg:
+                    h, s = hue_sat(pr, pg, pb)
+                    d_hue = min(abs(h - bg_h), 360 - abs(h - bg_h))
+                    same_hue = d_hue <= 12 and abs(s - bg_s) <= 0.35
+                    darker = lum < bg_lum - 120
+                    if darker and same_hue:
                         real_shadow += 1
 
         if fake:

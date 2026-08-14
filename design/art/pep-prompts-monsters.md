@@ -23,7 +23,12 @@ CHARACTER (MUST match exactly):
   belly/face #a5ffa0, antenna tips gold #ffd700, pupils #0a0c1e.
 
 LAYOUT (MUST follow exactly):
-- A 4x4 grid = 16 cells, each cell exactly 128x128 px (total 512x512 px).
+- A 4x4 grid = 16 cells, each cell exactly 128x128 px.
+- TOTAL IMAGE SIZE MUST BE EXACTLY 512x512 px (4 x 128 = 512,
+  with NO extra outer margin).
+- The 5 grid lines (left edge, 128, 256, 384, right edge) must be pure
+  background color, forming straight borders at exact multiples of 128 px
+  from the top-left corner.
 - Each cell contains ONE frame of the walk cycle (4 walking poses: left
   leg up / both down / right leg up / both down) repeated in 4 identical rows.
 - Draw a thin 4px border around EVERY cell using the background color
@@ -34,6 +39,8 @@ BACKGROUND (MUST):
 - Flat solid color ONLY: pure green #00ff00.
 - NO gradient, NO texture, NO vignette, NO clouds, NO grid pattern.
 - NO drop shadow, NO ground shadow, NO glow around the character.
+- Characters must NOT contain dark shades of the background color
+  (NO dark green, NO green-tinted shadows on the character).
 
 FORBIDDEN: NO text, NO letters, NO numbers, NO watermark, NO signature,
 NO extra characters, NO UI elements, NO background decoration.
@@ -65,7 +72,12 @@ CHARACTER (MUST match exactly):
   #ffffff, fin shades #ff2e97/#d91e7c.
 
 LAYOUT (MUST follow exactly):
-- A 4x4 grid = 16 cells, each cell exactly 128x128 px (total 512x512 px).
+- A 4x4 grid = 16 cells, each cell exactly 128x128 px.
+- TOTAL IMAGE SIZE MUST BE EXACTLY 512x512 px (4 x 128 = 512,
+  with NO extra outer margin).
+- The 5 grid lines (left edge, 128, 256, 384, right edge) must be pure
+  background color, forming straight borders at exact multiples of 128 px
+  from the top-left corner.
 - Each cell contains ONE frame of the run cycle (4 running poses:
   legs apart / together / crossed / together) repeated in 4 identical rows.
 - Draw a thin 4px border around EVERY cell using the background color
@@ -76,6 +88,8 @@ BACKGROUND (MUST):
 - Flat solid color ONLY: pure green #00ff00.
 - NO gradient, NO texture, NO vignette, NO clouds, NO grid pattern.
 - NO drop shadow, NO ground shadow, NO glow around the character.
+- Characters must NOT contain dark shades of the background color
+  (NO dark green, NO green-tinted shadows on the character).
 
 FORBIDDEN: NO text, NO letters, NO numbers, NO watermark, NO signature,
 NO extra characters, NO UI elements, NO background decoration.
@@ -107,7 +121,12 @@ CHARACTER (MUST match exactly):
   head rivets gold #ffd700.
 
 LAYOUT (MUST follow exactly):
-- A 4x4 grid = 16 cells, each cell exactly 128x128 px (total 512x512 px).
+- A 4x4 grid = 16 cells, each cell exactly 128x128 px.
+- TOTAL IMAGE SIZE MUST BE EXACTLY 512x512 px (4 x 128 = 512,
+  with NO extra outer margin).
+- The 5 grid lines (left edge, 128, 256, 384, right edge) must be pure
+  background color, forming straight borders at exact multiples of 128 px
+  from the top-left corner.
 - Each cell contains ONE frame of the walk cycle (4 heavy waddling poses:
   sway left / center / sway right / center) repeated in 4 identical rows.
 - Draw a thin 4px border around EVERY cell using the background color
@@ -118,6 +137,8 @@ BACKGROUND (MUST):
 - Flat solid color ONLY: pure green #00ff00.
 - NO gradient, NO texture, NO vignette, NO clouds, NO grid pattern.
 - NO drop shadow, NO ground shadow, NO glow around the character.
+- Characters must NOT contain dark shades of the background color
+  (NO dark green, NO green-tinted shadows on the character).
 
 FORBIDDEN: NO text, NO letters, NO numbers, NO watermark, NO signature,
 NO extra characters, NO UI elements, NO background decoration.
@@ -148,7 +169,12 @@ CHARACTER (MUST match exactly):
   #ffd700, brows/eyes #1a0508.
 
 LAYOUT (MUST follow exactly):
-- A 4x4 grid = 16 cells, each cell exactly 128x128 px (total 512x512 px).
+- A 4x4 grid = 16 cells, each cell exactly 128x128 px.
+- TOTAL IMAGE SIZE MUST BE EXACTLY 512x512 px (4 x 128 = 512,
+  with NO extra outer margin).
+- The 5 grid lines (left edge, 128, 256, 384, right edge) must be pure
+  background color, forming straight borders at exact multiples of 128 px
+  from the top-left corner.
 - Each cell contains ONE frame of the heavy walking cycle (4 big stomping
   poses: left foot forward / stand / right foot forward / stand) repeated
   in 4 identical rows. Horns must stay visible in ALL frames.
@@ -160,6 +186,8 @@ BACKGROUND (MUST):
 - Flat solid color ONLY: pure green #00ff00.
 - NO gradient, NO texture, NO vignette, NO clouds, NO grid pattern.
 - NO drop shadow, NO ground shadow, NO glow around the character.
+- Characters must NOT contain dark shades of the background color
+  (NO dark green, NO green-tinted shadows on the character).
 
 FORBIDDEN: NO text, NO letters, NO numbers, NO watermark, NO signature,
 NO extra characters, NO UI elements, NO background decoration.
@@ -189,11 +217,11 @@ NO extra characters, NO UI elements, NO background decoration.
 
 ## 🧪 Checklist ตรวจภาพก่อนเอาไปใช้ (ทุกตัวเหมือนกัน)
 
-1. [ ] เปิดภาพ → พื้นเขียว `#00ff00` ล้วน (ไม่มีไล่เฉด/เกรน)
-2. [ ] กรอบ 4px ระหว่างเซลล์ตรงเป็นเส้นตรงตลอดทั้งแถว/คอลัมน์
-3. [ ] ตัวละครไม่ติดขอบเซลล์ (มีช่องว่างรอบตัว ≥ 8px)
-4. [ ] ไม่มีเงาใต้ตัว / ไม่มีตัวหนังสือ / ไม่มีโลโก้
-5. [ ] รันคำสั่ง Python → ขึ้น `✅ เฟรมตรงกับกริดที่คาด (4x4)`
+1. [ ] **รัน `--check`** (คำสั่งท้ายแต่ละข้อ + ต่อท้าย `--check`) → exit `0` (ไม่มี ❌)
+2. [ ] เปิดภาพ → พื้นเขียว `#00ff00` ล้วน (ไม่มีไล่เฉด/เกรน) + ขนาด 512×512 พอดี
+3. [ ] เส้นกริดที่ x/y = 128, 256, 384 ตรงเป็นเส้น bg ล้วน (กรอบตรงพิทช์)
+4. [ ] ตัวละครไม่ติดขอบเซลล์ (มีช่องว่างรอบตัว ≥ 8px)
+5. [ ] ไม่มีเงาใต้ตัว / ไม่มีสีเขียวเข้มบนตัว / ไม่มีตัวหนังสือ / ไม่มีโลโก้
 6. [ ] เปิดเฟรม `_00.png`–`_15.png` → ตัวครบ ไม่มีเฟรมหลอก (ว่าง/ซ้ำกันแปลก ๆ)
 
 ## 🔧 ถ้า AI ทำไม่ตรงสัญญา (แก้ยังไง)
