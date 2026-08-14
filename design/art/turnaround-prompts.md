@@ -21,6 +21,8 @@
 Character turnaround sheet for a children's educational space game
 "Monster Speller". ONE character shown FOUR TIMES in a 2x2 grid,
 same scale, same proportions: FRONT / SIDE / BACK / THREE-QUARTER (3/4).
+The SIDE view MUST match the character's idle/contact stance used in the
+walk-cycle sheet (same leg pose, same proportions) so both sheets agree.
 FLAT 2D, NEON SCI-FI, subtle pixel-art texture, crisp dark outline,
 kid-friendly cartoon, cute NOT scary.
 
@@ -31,8 +33,10 @@ LAYOUT (MUST follow exactly):
 - The 3 grid lines (left, 256, right edge) must be pure background
   color, forming straight full-height/full-width borders at exact
   multiples of 256 px from the top-left corner.
-- Cell order: top-left FRONT, top-right SIDE, bottom-left BACK,
-  bottom-right THREE-QUARTER (3/4).
+- Cell order: top-left FRONT, top-right SIDE (profile facing RIGHT),
+  bottom-left BACK, bottom-right THREE-QUARTER (3/4).
+- The SIDE cell (top-right) must be the same pose as walk-cycle CONTACT
+  stance (see design/art/walk-cycle-spec.md) — matching leg/body position.
 - Draw a thin 4px border around EVERY cell using the background color.
 
 BACKGROUND (MUST):

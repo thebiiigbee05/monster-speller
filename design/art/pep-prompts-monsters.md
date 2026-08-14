@@ -27,6 +27,12 @@
 Create a single sprite sheet PNG for a 2D game monster: a round green alien
 "Walker Monster" for a kids' space shooter game. Flat 2D, neon sci-fi style.
 
+VIEW (MUST):
+- The monster is drawn in SIDE VIEW (profile), facing RIGHT, seen from the
+  side — never front view, never back view. All 4 cells show the same
+  monster in the same side view, only the legs/body pose changes.
+- ONE monster per cell, consistent size and position across cells.
+
 CHARACTER (MUST match exactly):
 - Round oval body (wider than tall), two big round eyes with clear pupils,
   two short legs, two thin antennae with GOLD tips #ffd700 (its signature).
@@ -39,6 +45,9 @@ LAYOUT (MUST follow exactly):
 - A 4x1 grid = 4 cells in ONE horizontal row, each cell exactly 128x128 px.
 - TOTAL IMAGE SIZE MUST BE EXACTLY 512x128 px (4 x 128 = 512 wide,
   128 tall, with NO extra outer margin).
+- Fill the ENTIRE canvas: the character row spans the full height of the
+  image. NO empty bands/letterbox above or below the character, NO extra
+  background area at the top or bottom, NO margin around the grid.
 - 5 vertical grid lines at x = 0, 128, 256, 384, 512 (left edge, 128, 256,
   384, right edge) plus horizontal borders at y = 0 and y = 128 — all pure
   background color, forming straight borders at exact multiples of 128 px.
@@ -61,6 +70,8 @@ BACKGROUND (MUST):
 
 FORBIDDEN: NO text, NO letters, NO numbers, NO watermark, NO signature,
 NO extra characters, NO UI elements, NO background decoration.
+NO duplicate poses (every cell MUST be a distinct pose — do NOT copy the
+same pose into multiple cells; repeating a pose will fail the check).
 ```
 
 **คำสั่ง Python (หลังได้ภาพ):**
@@ -79,6 +90,12 @@ cd monster-speller-src
 Create a single sprite sheet PNG for a 2D game monster: a fast lean pink
 alien "Runner Monster" for a kids' space shooter game. Flat 2D, neon sci-fi.
 
+VIEW (MUST):
+- The monster is drawn in SIDE VIEW (profile), facing RIGHT, seen from the
+  side — never front view, never back view. All 4 cells show the same
+  monster in the same side view, only the legs/body pose changes.
+- ONE monster per cell, consistent size and position across cells.
+
 CHARACTER (MUST match exactly):
 - SLIM body leaning FORWARD 15 degrees (always running), 3 big eyes
   (middle one smaller), dorsal fin on the back, TWO WHITE sneakers
@@ -92,6 +109,9 @@ LAYOUT (MUST follow exactly):
 - A 4x1 grid = 4 cells in ONE horizontal row, each cell exactly 128x128 px.
 - TOTAL IMAGE SIZE MUST BE EXACTLY 512x128 px (4 x 128 = 512 wide,
   128 tall, with NO extra outer margin).
+- Fill the ENTIRE canvas: the character row spans the full height of the
+  image. NO empty bands/letterbox above or below the character, NO extra
+  background area at the top or bottom, NO margin around the grid.
 - 5 vertical grid lines at x = 0, 128, 256, 384, 512 (left edge, 128, 256,
   384, right edge) plus horizontal borders at y = 0 and y = 128 — all pure
   background color, forming straight borders at exact multiples of 128 px.
@@ -114,6 +134,8 @@ BACKGROUND (MUST):
 
 FORBIDDEN: NO text, NO letters, NO numbers, NO watermark, NO signature,
 NO extra characters, NO UI elements, NO background decoration.
+NO duplicate poses (every cell MUST be a distinct pose — do NOT copy the
+same pose into multiple cells; repeating a pose will fail the check).
 ```
 
 **คำสั่ง Python (หลังได้ภาพ):**
@@ -133,6 +155,12 @@ Create a single sprite sheet PNG for a 2D game monster: a heavy wide purple
 armored alien "Tank Monster" for a kids' space shooter game. Flat 2D,
 neon sci-fi style.
 
+VIEW (MUST):
+- The monster is drawn in SIDE VIEW (profile), facing RIGHT, seen from the
+  side — never front view, never back view. All 4 cells show the same
+  monster in the same side view, only the legs/body pose changes.
+- ONE monster per cell, consistent size and position across cells.
+
 CHARACTER (MUST match exactly):
 - WIDEST body of all monsters (rounded rectangle / wide oval, width > height),
   sleepy half-closed droopy eyes, TWO GOLD rivets #ffd700 on top of the head
@@ -146,6 +174,9 @@ LAYOUT (MUST follow exactly):
 - A 4x1 grid = 4 cells in ONE horizontal row, each cell exactly 128x128 px.
 - TOTAL IMAGE SIZE MUST BE EXACTLY 512x128 px (4 x 128 = 512 wide,
   128 tall, with NO extra outer margin).
+- Fill the ENTIRE canvas: the character row spans the full height of the
+  image. NO empty bands/letterbox above or below the character, NO extra
+  background area at the top or bottom, NO margin around the grid.
 - 5 vertical grid lines at x = 0, 128, 256, 384, 512 (left edge, 128, 256,
   384, right edge) plus horizontal borders at y = 0 and y = 128 — all pure
   background color, forming straight borders at exact multiples of 128 px.
@@ -168,6 +199,8 @@ BACKGROUND (MUST):
 
 FORBIDDEN: NO text, NO letters, NO numbers, NO watermark, NO signature,
 NO extra characters, NO UI elements, NO background decoration.
+NO duplicate poses (every cell MUST be a distinct pose — do NOT copy the
+same pose into multiple cells; repeating a pose will fail the check).
 ```
 
 **คำสั่ง Python (หลังได้ภาพ):**
@@ -186,6 +219,12 @@ cd monster-speller-src
 Create a single sprite sheet PNG for a 2D game monster: the BIG red boss
 "Monster King" for a kids' space shooter game. Flat 2D, neon sci-fi style.
 
+VIEW (MUST):
+- The monster is drawn in SIDE VIEW (profile), facing RIGHT, seen from the
+  side — never front view, never back view. All 4 cells show the same
+  monster in the same side view, only the legs/body pose changes.
+- ONE monster per cell, consistent size and position across cells.
+
 CHARACTER (MUST match exactly):
 - The LARGEST monster (taller than the others), two curved GOLD horns
   #ffd700 (its royal signature, curved outward), angry thick eyebrows,
@@ -199,6 +238,9 @@ LAYOUT (MUST follow exactly):
 - A 4x1 grid = 4 cells in ONE horizontal row, each cell exactly 128x128 px.
 - TOTAL IMAGE SIZE MUST BE EXACTLY 512x128 px (4 x 128 = 512 wide,
   128 tall, with NO extra outer margin).
+- Fill the ENTIRE canvas: the character row spans the full height of the
+  image. NO empty bands/letterbox above or below the character, NO extra
+  background area at the top or bottom, NO margin around the grid.
 - 5 vertical grid lines at x = 0, 128, 256, 384, 512 (left edge, 128, 256,
   384, right edge) plus horizontal borders at y = 0 and y = 128 — all pure
   background color, forming straight borders at exact multiples of 128 px.
@@ -221,6 +263,8 @@ BACKGROUND (MUST):
 
 FORBIDDEN: NO text, NO letters, NO numbers, NO watermark, NO signature,
 NO extra characters, NO UI elements, NO background decoration.
+NO duplicate poses (every cell MUST be a distinct pose — do NOT copy the
+same pose into multiple cells; repeating a pose will fail the check).
 ```
 
 **คำสั่ง Python (หลังได้ภาพ):**

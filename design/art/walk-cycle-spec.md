@@ -76,6 +76,8 @@
 ## 5. ข้อความพรอมต์สำเร็จรูป (คัดลอกต่อท้ายพรอมต์ PEP)
 
 ```text
+VIEW: SIDE VIEW (profile), character faces RIGHT. Never front/back view.
+
 WALK CYCLE (MUST follow exactly):
 - Draw exactly 4 DISTINCT walking poses in order: 1) CONTACT (front leg
   straight forward ~30 degrees, back leg trailing ~20 degrees, body mid
