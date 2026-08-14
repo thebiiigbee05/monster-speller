@@ -69,6 +69,8 @@ export class GameEngine {
   private ctx: CanvasRenderingContext2D;
   private events: EngineEvents;
   private sprite: SpriteRenderer | null = null;
+  /** พื้นหลังอวกาศ (scripts/generate-background.mjs → public/assets/bg/space-bg.png) */
+  private bg: HTMLImageElement | null = null;
   private loop: GameLoop;
 
   private elapsed = 0;
@@ -125,7 +127,19 @@ export class GameEngine {
     if (!this.sprite) {
       this.sprite = await SpriteRenderer.load();
     }
+    if (!this.bg) {
+      this.bg = await this.loadImage(import.meta.env.BASE_URL + 'assets/bg/space-bg.png');
+    }
     this.loop.start();
+  }
+
+  private loadImage(src: string): Promise<HTMLImageElement> {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error(`โหลดภาพไม่สำเร็จ: ${src}`));
+      img.src = src;
+    });
   }
 
   stop(): void {
@@ -404,12 +418,16 @@ export class GameEngine {
       ctx.translate((Math.random() - 0.5) * this.shake * 13, (Math.random() - 0.5) * this.shake * 13);
     }
 
-    // พื้นหลัง (เผื่อขอบไว้นิดตอนสั่น)
-    const bg = ctx.createLinearGradient(0, 0, 0, CANVAS_H);
-    bg.addColorStop(0, '#0b0f2a');
-    bg.addColorStop(1, '#1a1140');
-    ctx.fillStyle = bg;
-    ctx.fillRect(-24, -24, CANVAS_W + 48, CANVAS_H + 48);
+    // พื้นหลัง (ภาพ PNG — เผื่อขอบไว้นิดตอนสั่น)
+    if (this.bg) {
+      ctx.drawImage(this.bg, -24, -24, CANVAS_W + 48, CANVAS_H + 48);
+    } else {
+      const bg = ctx.createLinearGradient(0, 0, 0, CANVAS_H);
+      bg.addColorStop(0, '#0b0f2a');
+      bg.addColorStop(1, '#1a1140');
+      ctx.fillStyle = bg;
+      ctx.fillRect(-24, -24, CANVAS_W + 48, CANVAS_H + 48);
+    }
 
     // ดาว 2 ชั้น parallax + กะพริบ
     this.drawStars(ctx, this.starsFar, t, 0.75);
