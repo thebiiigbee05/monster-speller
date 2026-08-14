@@ -76,9 +76,11 @@
 Create a single sprite sheet PNG for a 2D game character: <CHARACTER>.
 
 LAYOUT (MUST follow exactly):
-- A 4x4 grid = 16 cells, each cell exactly 128x128 px.
-- TOTAL IMAGE SIZE MUST BE EXACTLY 512x512 px
-  (4 x 128 = 512, with NO extra outer margin).
+- A 4x1 grid = 4 cells in ONE horizontal row, each cell exactly 128x128 px.
+- TOTAL IMAGE SIZE MUST BE EXACTLY 512x128 px (4 x 128 = 512 wide,
+  128 tall, with NO extra outer margin).
+- The 4 cells MUST be 4 DISTINCT animation poses (e.g. walk cycle:
+  contact / down / passing / up) — NO duplicate cells.
 - The 5 grid lines (left, 128, 256, 384, right edge) must be pure
   background color, forming straight full-height/full-width borders
   at exact multiples of 128 px from the top-left corner.
@@ -113,20 +115,20 @@ NO extra characters, NO UI elements, NO background decoration.
 # 1 บรรทัดจบ: ตรวจก่อน (--require-check) → ผ่านจึงตัดเฟรม + manifest
 ./.venv-scripts/Scripts/python.exe scripts/ai-sprite-process.py <sheet.png> \
     --name walker --cell 64 --out-dir out/ \
-    --grid-bg "#00ff00" --expect-grid 4x4 --require-check
+    --grid-bg "#00ff00" --expect-grid 4x1 --require-check --drop-flat --dedupe
 
 # หรือตรวจอย่างเดียว (ไม่สร้างไฟล์)
 ./.venv-scripts/Scripts/python.exe scripts/ai-sprite-process.py <sheet.png> \
-    --check --grid-bg "#00ff00" --expect-grid 4x4
+    --check --grid-bg "#00ff00" --expect-grid 4x1
 ```
 
 | ตรวจ | วิธี | ผ่านเมื่อ |
 |---|---|---|
-| พื้นเป็นสีเดียวจริง | `--check` → กริด | กริดครบ 4×4, เฟรม 16 |
+| พื้นเป็นสีเดียวจริง | `--check` → กริด | กริดครบ 4×1 (แถวเดียว), เฟรม 4 |
 | ไม่มีเงา | `--check` → เงาตกค้าง | ไม่มี warn เงา |
-| กรอบตรง/ตรงพิทช์ | `--check` → กริด + ตัวติดขอบ | ตรง 4x4 + ไม่มี warn ติดขอบ |
+| กรอบตรง/ตรงพิทช์ | `--check` → กริด + ตัวติดขอบ | ตรง 4x1 + ไม่มี warn ติดขอบ |
 | ไม่มีเฟรมหลอก/ข้อความ | `--check` → เฟรมหลอก | ไม่มี error |
-| ขนาดภาพตรงสัญญา | เปิดภาพ / `file` | 512×512 พอดี (ไม่มี margin พิเศษ) |
+| ขนาดภาพตรงสัญญา | เปิดภาพ / `file` | 512×128 พอดี (ไม่มี margin พิเศษ) |
 
 **exit code:** `0` = ผ่าน (มีแค่ ok/warn) · `1` = มี error → **อย่าเอาไปใช้ ไป gen ใหม่**
 

@@ -447,8 +447,11 @@ def check_sheet(img, bg_rgb, expect=None, tol=28, expected_grid=None):
         (ขอบซ้าย/บนของภาพ) — ไม่ infer จากเนื้อ (เนื้อมี padding ไม่แน่นอน)
         คืน (strips, pitch)
         """
-        if not n_expected or n_expected < 2:
+        if not n_expected:
             return [], 0
+        if n_expected == 1:
+            # แถว/คอลัมน์เดียว: 2 เส้น = ขอบซ้าย/ขวา (หรือ บน/ล่าง) เท่านั้น
+            return [(0, 0), (dim - 1, dim - 1)], float(dim)
         pitch = dim / n_expected
         npitch = int(round(pitch))
         # สร้าง n_expected+1 เส้น (รวมขอบขวา/ล่าง) — คลิปให้อยู่ในภาพ

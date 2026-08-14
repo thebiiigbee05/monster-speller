@@ -116,7 +116,7 @@ git push -u origin main
 
 | งาน | ไฟล์ | กริด (`--expect-grid`) |
 |---|---|---|
-| สไปรต์มอนสเตอร์ 4 ชนิด | [`design/art/pep-prompts-monsters.md`](design/art/pep-prompts-monsters.md) | `4x4` |
+| สไปรต์มอนสเตอร์ 4 ชนิด | [`design/art/pep-prompts-monsters.md`](design/art/pep-prompts-monsters.md) | `4x1` (4 ท่าเดิน) |
 | เทิร์นอราวด์ 4 มุม | [`design/art/turnaround-prompts.md`](design/art/turnaround-prompts.md) | `2x2` |
 | กระสุน 8 มาตรา / ชิ้นส่วน / ไอเท็ม / ไอคอน | [`docs/15-chapter-15-graphics-assets.md`](docs/15-chapter-15-graphics-assets.md) (15.4) | `4x2` / `2x2` / `1x5` |
 | เทมเพลตสินทรัพย์เล็ก (เติมเอง) | docs/15 → 15.4.5 | ตามตาราง |
