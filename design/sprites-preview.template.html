@@ -2,48 +2,85 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<title>Preview — Sprite sheet มอนสเตอร์</title>
+<title>Preview — Sprite sheet มอนสเตอร์ (แอนิเมต)</title>
 <style>
-  body { background: #0b0f2a; color: #e6e9ff; font-family: 'Sarabun','Leelawadee UI',Tahoma,sans-serif; padding: 20px; }
-  h1 { color: #00e5ff; }
-  .monster-row { margin-bottom: 24px; }
-  .monster-title { margin: 8px 0; font-weight: bold; }
-  .frames { display: flex; gap: 8px; flex-wrap: wrap; }
+  body { background: #0b0f2a; color: #e6e9ff; font-family: 'Prompt','Sarabun',Tahoma,sans-serif; padding: 24px; }
+  h1 { color: #00e5ff; font-family: 'Chakra Petch', sans-serif; letter-spacing: 1px; }
+  .sub { color: #9aa0c8; font-size: 13px; margin-bottom: 24px; line-height: 1.7; }
+  .monster-row { margin-bottom: 28px; }
+  .monster-head { display: flex; align-items: center; gap: 14px; margin-bottom: 10px; }
+  .monster-title { font-weight: bold; font-size: 16px; }
+  .anim-box {
+    width: 120px; height: 120px;
+    background: radial-gradient(circle at 50% 40%, #1a2150, #05070f);
+    border: 1px solid rgba(0,229,255,.35);
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .anim-box canvas { image-rendering: pixelated; }
+  .badge { font-size: 11px; color: #39ff14; border: 1px solid rgba(57,255,20,.4); padding: 2px 10px; border-radius: 999px; }
+  .frames { display: flex; gap: 10px; flex-wrap: wrap; }
   .frame { text-align: center; }
-  .frame canvas { border: 1px solid rgba(255,255,255,.25); border-radius: 6px; background: #000; image-rendering: pixelated; }
-  .frame-label { font-size: 11px; color: #9aa0c8; margin-top: 4px; }
-  .note { color: #9aa0c8; font-size: 12px; margin-top: 20px; line-height: 1.6; }
+  .frame canvas { border: 1px solid rgba(255,255,255,.22); border-radius: 8px; background: #0a0e22; image-rendering: pixelated; }
+  .frame-label { font-size: 11px; color: #9aa0c8; margin-top: 5px; }
+  .frame.active canvas { border-color: #ffd700; box-shadow: 0 0 12px rgba(255,215,0,.4); }
+  .frame.active .frame-label { color: #ffd700; }
+  .note { color: #9aa0c8; font-size: 12px; margin-top: 24px; line-height: 1.8; }
 </style>
 </head>
 <body>
-<h1>👾 Preview — monsters-sheet.png (384×256, เซลล์ 64×64)</h1>
-<p class="note">เฟรม: เดิน-1 · เดิน-2 · ระเบิด-1 · ระเบิด-2 · ระเบิด-3 · เป็นมิตร — โหลดจาก <code>public/assets/sprites/monsters-sheet.png</code></p>
+<h1>👾 Sprite sheet มอนสเตอร์ v3 (640×256, เซลล์ 64×64)</h1>
+<p class="sub">เดิน 4 เฟรม (วนอัตโนมัติที่กล่องซ้าย) · ตะลึง · ระเบิด 1–3 · เป็นมิตร 1–2 — วาดด้วย pixel-art 32×32 ไล่เฉด 5 ระดับ + เงา + ไฮไลต์</p>
 <div id="root"></div>
+<p class="note">เฟรมกะพริบสีทอง = เฟรมที่กำลังเล่นในแอนิเมชัน · วิธีใช้ในเกม: <code>Monster.frameName()</code> → walk1..4 / stun / explode1..3 / friendly1..2</p>
 
 <script>
   const SHEET = '__SHEET_B64__';
-  const CELL = 64, SCALE = 3;
+  const CELL = 64, SCALE = 2.4;
+  const FRAME_NAMES = ['walk1','walk2','walk3','walk4','stun','explode1','explode2','explode3','friendly1','friendly2'];
+  const FRAME_LABELS = ['เดิน-1','เดิน-2','เดิน-3','เดิน-4','ตะลึง','ระเบิด-1','ระเบิด-2','ระเบิด-3','เป็นมิตร-1','เป็นมิตร-2'];
   const ROWS = [
-    { id: 'walker', name: '👾 Walker (แม่กก) — เขียว', frames: ['เดิน-1','เดิน-2','ระเบิด-1','ระเบิด-2','ระเบิด-3','เป็นมิตร'] },
-    { id: 'runner', name: '🏃 Runner (แม่กด) — ชมพู', frames: ['เดิน-1','เดิน-2','ระเบิด-1','ระเบิด-2','ระเบิด-3','เป็นมิตร'] },
-    { id: 'tank',   name: '🛡️ Tank (แม่กบ) — ม่วง', frames: ['เดิน-1','เดิน-2','ระเบิด-1','ระเบิด-2','ระเบิด-3','เป็นมิตร'] },
-    { id: 'boss',   name: '👑 Boss (แม่กน) — แดง', frames: ['เดิน-1','เดิน-2','ระเบิด-1','ระเบิด-2','ระเบิด-3','เป็นมิตร'] },
+    { id: 'walker', name: '👾 Walker (แม่กก) — เขียว', color: '#39ff14' },
+    { id: 'runner', name: '🏃 Runner (แม่กด) — ชมพู', color: '#ff2e97' },
+    { id: 'tank',   name: '🛡️ Tank (แม่กบ) — ม่วง', color: '#a855f7' },
+    { id: 'boss',   name: '👑 Boss (แม่กน) — แดง', color: '#ff3b3b' },
   ];
 
   const img = new Image();
   img.onload = () => {
     const root = document.getElementById('root');
+    const anims = [];
+
     ROWS.forEach((row, ri) => {
       const section = document.createElement('div');
       section.className = 'monster-row';
+
+      const head = document.createElement('div');
+      head.className = 'monster-head';
       const title = document.createElement('div');
       title.className = 'monster-title';
       title.textContent = row.name;
-      section.appendChild(title);
+      title.style.color = row.color;
+      const badge = document.createElement('div');
+      badge.className = 'badge';
+      badge.textContent = '▶ แอนิเมชันเดิน';
+      head.appendChild(title);
+      head.appendChild(badge);
+      section.appendChild(head);
+
+      const animBox = document.createElement('div');
+      animBox.className = 'anim-box';
+      const animCanvas = document.createElement('canvas');
+      animCanvas.width = CELL * SCALE; animCanvas.height = CELL * SCALE;
+      const actx = animCanvas.getContext('2d');
+      actx.imageSmoothingEnabled = false;
+      animBox.appendChild(animCanvas);
+      section.appendChild(animBox);
 
       const frames = document.createElement('div');
       frames.className = 'frames';
-      row.frames.forEach((label, fi) => {
+      const canvases = [];
+      FRAME_NAMES.forEach((name, fi) => {
         const box = document.createElement('div');
         box.className = 'frame';
         const canvas = document.createElement('canvas');
@@ -53,13 +90,24 @@
         ctx.drawImage(img, fi * CELL, ri * CELL, CELL, CELL, 0, 0, CELL * SCALE, CELL * SCALE);
         const cap = document.createElement('div');
         cap.className = 'frame-label';
-        cap.textContent = label;
+        cap.textContent = FRAME_LABELS[fi];
         box.appendChild(canvas);
         box.appendChild(cap);
         frames.appendChild(box);
+        canvases.push(box);
       });
       section.appendChild(frames);
       root.appendChild(section);
+
+      // แอนิเมชัน walk 4 เฟรม (วน ~6 เฟรม/วิ)
+      let phase = 0;
+      anims.push(setInterval(() => {
+        const fi = phase % 4;
+        actx.clearRect(0, 0, animCanvas.width, animCanvas.height);
+        actx.drawImage(img, fi * CELL, ri * CELL, CELL, CELL, 0, 0, CELL * SCALE, CELL * SCALE);
+        canvases.forEach((c, i) => c.classList.toggle('active', i === fi));
+        phase = (phase + 1) % 4;
+      }, 160));
     });
   };
   img.src = SHEET;

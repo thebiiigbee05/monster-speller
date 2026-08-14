@@ -59,9 +59,10 @@ export abstract class Monster {
     if (this.state === 'walking') {
       this.x -= this.speed * dt * speedMultiplier;
       this.walkTimer += dt;
+      // walk cycle 4 เฟรม (0.3 วิ/เฟรม → ครบ 1 รอบ ~1.2 วิ)
       if (this.walkTimer >= 0.3) {
         this.walkTimer = 0;
-        this.walkPhase = this.walkPhase === 0 ? 1 : 0;
+        this.walkPhase = (this.walkPhase + 1) % 4;
       }
     }
   }
@@ -82,14 +83,17 @@ export abstract class Monster {
     return { correct: false, hintLevel: this.hintLevel };
   }
 
-  /** ชื่อเฟรมสำหรับ SpriteRenderer (docs/04-chapter-4-game-design.md) */
+  /** ชื่อเฟรมสำหรับ SpriteRenderer — walk1..4 / stun / explode1..3 / friendly1..2 */
   frameName(): string {
     if (this.state === 'exploding') {
-      const step = Math.min(3, Math.floor(this.stateTimer / 0.12) + 1);
+      const step = Math.min(3, Math.floor(this.stateTimer / (EXPLODE_SECONDS / 3)) + 1);
       return `explode${step}`;
     }
-    if (this.state === 'friendly') return 'friendly';
-    return this.walkPhase === 0 ? 'walk1' : 'walk2';
+    if (this.state === 'friendly') {
+      return this.stateTimer < FRIENDLY_SECONDS / 2 ? 'friendly1' : 'friendly2';
+    }
+    if (this.state === 'stunned') return 'stun';
+    return `walk${this.walkPhase + 1}`;
   }
 }
 

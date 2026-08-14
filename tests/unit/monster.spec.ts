@@ -84,16 +84,32 @@ describe('Monster OOP (docs/07-chapter-7 ข้อ 7.3 + docs/10-chapter-10 ข�
     expect(m.x).toBe(1000 - m.speed * 2);
   });
 
-  it('เฟรมแอนิเมชัน: เดินสลับ walk1/walk2 และระเบิด explode1→2→3', () => {
+  it('เฟรมแอนิเมชัน: เดินวน walk1→4, ตะลึง stun, ระเบิด explode1→2→3, เป็นมิตร friendly1/2', () => {
     const m = new WalkerMonster(WORD_KK, 100, 100);
-    expect(['walk1', 'walk2']).toContain(m.frameName());
+    // walk cycle 4 เฟรม (0.3 วิ/เฟรม)
+    const seen = new Set([m.frameName()]);
+    for (let i = 0; i < 4; i += 1) {
+      m.update(0.31, 1);
+      seen.add(m.frameName());
+    }
+    expect([...seen].sort()).toEqual(['walk1', 'walk2', 'walk3', 'walk4']);
 
-    m.hit('กก'); // ระเบิด
+    // ยิงผิด → ตะลึง (เฟรม stun)
+    m.hit('กบ');
+    expect(m.frameName()).toBe('stun');
+
+    // ยิงถูก → ระเบิด explode1→2→3
+    m.update(2.1, 1); // เลิกชะงัก
+    m.hit('กก');
     expect(m.frameName()).toBe('explode1');
     m.stateTimer = 0.13;
     expect(m.frameName()).toBe('explode2');
     m.stateTimer = 0.25;
     expect(m.frameName()).toBe('explode3');
+
+    // เป็นมิตร → สลับ friendly1/friendly2
+    m.update(0.2, 1);
+    expect(['friendly1', 'friendly2']).toContain(m.frameName());
   });
 
   it('คำไม่ตรงมาตรา (ไม่ตรง) เก็บ flag regular ตาม wordBank', () => {
