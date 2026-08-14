@@ -287,6 +287,235 @@ def detect_frames(img, threshold_ratio=0.15, min_gap=1):
     return frames
 
 # ----------------------------------------------------------------------------
+# 3b) โหมด --check: รายงานตรวจภาพก่อนใช้ (ไม่ตัดเฟรม ไม่สร้างไฟล์)
+# ----------------------------------------------------------------------------
+
+def check_sheet(img, bg_rgb, expect=None, tol=28, expected_grid=None):
+    """
+    ตรวจ sheet ว่าตรงสัญญา PEP ไหม — คืน (issues, summary)
+    issues: รายการ dict {level: 'ok'|'warn'|'error', check, detail}
+    summary: dict นับผล
+
+    ตรวจ 5 อย่าง:
+      1. พื้นเป็นสีเดียว (bg_rgb) จริงไหม — นอกขอบเขตเนื้อ
+      2. กริด: จำนวนเซลล์ตรง --expect-grid ไหม + ตรวจเจอเซลล์ว่าง/หลายตัว
+      3. ตัวติดขอบเซลล์ (เนื้อล้ำเข้าแถบขอบ)
+      4. เฟรมหลอก (เนื้อน้อยเกินสัดส่วน)
+      5. เงาตกค้าง (แถวล่างที่ไร้สีสัน + เข้มกว่าพื้น)
+    """
+    img = img.convert("RGBA")  # กันภาพ RGB (ไม่มี alpha)
+    w, h = img.size
+    src = img.load()
+    issues = []
+    def add(level, check, detail):
+        issues.append({"level": level, "check": check, "detail": detail})
+
+    # ---- ก) ลบพื้นแบบ key (คัดลอก ไม่แตะต้นฉบับ) + flood กันเนื้อ --------
+    keyed = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    kdst = keyed.load()
+    for y in range(h):
+        for x in range(w):
+            pr, pg, pb, pa = src[x, y]
+            if is_near((pr, pg, pb), bg_rgb, tol):
+                kdst[x, y] = (pr, pg, pb, 0)
+            else:
+                kdst[x, y] = (pr, pg, pb, pa)
+
+    visited = bytearray(w * h)
+    bg_flagged = bytearray(w * h)
+    # พื้นที่เปิด (ถึงขอบภาพ) = พื้นหลัง
+    stack = [(0, 0)]
+    visited[0] = 1
+    while stack:
+        x, y = stack.pop()
+        idx = y * w + x
+        if kdst[x, y][3] > 0:
+            continue  # เจอเนื้อ → หยุด (ไม่ flood เข้าไป)
+        bg_flagged[idx] = 1
+        for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+            nx, ny = x + dx, y + dy
+            if 0 <= nx < w and 0 <= ny < h and not visited[ny * w + nx]:
+                visited[ny * w + nx] = 1
+                stack.append((nx, ny))
+
+    # ---- ข) เส้นกริด: หาแบบ คาบ (pitch) จากแถว/คอลัมน์ที่มีเนื้อครบ --------
+    # พื้นว่างในเซลล์ (เหนือ/ใต้ตัว) เป็น bg บางแถวเท่านั้น → ใช้เฉพาะแถวที่
+    # มีเนื้อทุกคอลัมน์ (ข้ามเซลล์) เพื่อหาแถบกริดจริง แล้วสร้างกริดตามคาบ
+    col_content = [0] * w
+    row_content = [0] * h
+    for y in range(h):
+        for x in range(w):
+            if kdst[x, y][3] > 0 and not bg_flagged[y * w + x]:
+                col_content[x] += 1
+                row_content[y] += 1
+
+    def bands_of_row(flags):
+        """แถบ bg ติดกันในแถว/คอลัมน์ (1 มิติ) — คืนรายการ (start, end)"""
+        runs = []
+        start = None
+        for i, f in enumerate(flags + [False]):
+            if f and start is None:
+                start = i
+            elif not f and start is not None:
+                runs.append((start, i - 1))
+                start = None
+        return runs
+
+    def grid_from_contract(dim, n_expected):
+        """
+        กริดจากสัญญา PEP โดยตรง: pitch = dim / n_expected, anchor ที่ 0
+        (ขอบซ้าย/บนของภาพ) — ไม่ infer จากเนื้อ (เนื้อมี padding ไม่แน่นอน)
+        คืน (strips, pitch)
+        """
+        if not n_expected or n_expected < 2:
+            return [], 0
+        pitch = dim / n_expected
+        npitch = int(round(pitch))
+        # สร้าง n_expected+1 เส้น (รวมขอบขวา/ล่าง) — คลิปให้อยู่ในภาพ
+        strips = [(min(k * npitch, dim - 1), min(k * npitch, dim - 1))
+                  for k in range(n_expected + 1)]
+        return strips, pitch
+
+    # คอลัมน์ bg ในแต่ละแถว (สำหรับหาเส้นแนวตั้ง)
+    col_zero_lines = []
+    for y in range(h):
+        col_zero_lines.append([kdst[x, y][3] == 0 or bg_flagged[y * w + x]
+                               for x in range(w)])
+    row_zero_lines = []
+    for x in range(w):
+        row_zero_lines.append([kdst[x, y][3] == 0 or bg_flagged[y * w + x]
+                               for y in range(h)])
+
+    # จำนวนเซลล์ที่คาด (จาก --expect-grid ถ้ามี) — กริดจากสัญญาโดยตรง
+    ex_cols = ex_rows = 0
+    if expected_grid:
+        ex_cols, ex_rows = (int(v) for v in expected_grid.lower().split("x"))
+
+    col_strips, pitch_x = grid_from_contract(w, ex_cols)
+    row_strips, pitch_y = grid_from_contract(h, ex_rows)
+    ncols = len(col_strips) - 1 if col_strips else 0
+    nrows = len(row_strips) - 1 if row_strips else 0
+    # ขอบจริง ≈ (pitch − เซลล์)/2 แต่เซลล์ไม่รู้ → ใช้ 10% ของ pitch เป็น
+    # เกณฑ์ "เนื้อล้ำใกล้ขอบเกินไป" (กันตัวติดขอบจริง แต่ไม่รบกวน padding ปกติ)
+    border_w = max(3, int(pitch_x * 0.10)) if pitch_x else 3
+    border_h = max(3, int(pitch_y * 0.10)) if pitch_y else 3
+
+    # ---- ค) เซลล์ (ระหว่างเส้นกริด) — ใช้คาบตรงจาก strips ---------------
+    cells = []
+    for r in range(nrows):
+        y0 = row_strips[r][0] + 1
+        y1 = row_strips[r + 1][0] - 1
+        for c in range(ncols):
+            x0 = col_strips[c][0] + 1
+            x1 = col_strips[c + 1][0] - 1
+            cells.append((x0, y0, x1, y1))
+
+    if cells:
+        cell_areas = [(x1 - x0 + 1) * (y1 - y0 + 1) for (x0, y0, x1, y1) in cells]
+        median_area = sorted(cell_areas)[len(cell_areas) // 2]
+
+        fake = 0
+        touch = []
+        real_shadow = 0
+        for (x0, y0, x1, y1) in cells:
+            # ความหนาแน่นเนื้อ (อัตราส่วนพิกเซลเนื้อจริงต่อพื้นที่เซลล์)
+            # — ไม่ขึ้นกับขนาดตัวอย่าง: เซลล์ปกติต้องมีเนื้อ ≥ 5%
+            cw_, ch_ = x1 - x0 + 1, y1 - y0 + 1
+            content = 0
+            total_s = 0
+            for y in range(y0, y1 + 1, max(1, ch_ // 16)):
+                for x in range(x0, x1 + 1, max(1, cw_ // 16)):
+                    total_s += 1
+                    if kdst[x, y][3] > 0 and not bg_flagged[y * w + x]:
+                        content += 1
+            if content / max(1, total_s) < 0.05:
+                fake += 1
+            # ตัวติดขอบ: ตรวจจากภาพต้นฉบับ (src) ตรง ๆ — มีเนื้อล้ำเข้า
+            # แถบกรอบจริง (border_h/w px จากมุมเซลล์) ด้านใดด้านหนึ่งไหม
+            def edge_content(xs_, ys_):
+                return any(not is_near(src[px_, py_][:3], bg_rgb, tol)
+                           for py_ in ys_ for px_ in xs_)
+            touching = (
+                edge_content(range(x0, x1 + 1), range(y0, y0 + border_h))
+                or edge_content(range(x0, x1 + 1),
+                                range(y1 - border_h + 1, y1 + 1))
+                or edge_content(range(x0, x0 + border_w), range(y0, y1 + 1))
+                or edge_content(range(x1 - border_w + 1, x1 + 1),
+                                range(y0, y1 + 1))
+            )
+            if touching:
+                touch.append((x0, y0, x1, y1))
+            # เงาตกค้าง: ตรวจทั้งครึ่งล่างของเซลล์จากภาพต้นฉบับ — พิกเซลที่
+            # (ก) สว่างรวม (luminance) ต่ำกว่าพื้นมาก และ
+            # (ข) สีใกล้ bg (hue เดียวกัน — เงาเป็น bg เข้ม ไม่ใช่สีตัว)
+            # เงาเขียวเข้ม (0,110,0) ผ่านทั้งคู่ แต่ตัวเขียวสด (30,200,90)
+            # มีลูมสูง + ต่างจาก bg ชัด → ไม่ผ่าน
+            bg_lum = sum(bg_rgb)
+            for yy in range(y0 + (y1 - y0) // 2, y1 + 1):
+                for xx in range(x0, x1 + 1):
+                    pr, pg, pb = src[xx, yy][:3]
+                    lum = pr + pg + pb
+                    darker = lum < bg_lum - 120  # เข้มกว่าพื้นชัดเจน
+                    near_bg = (abs(pr - bg_rgb[0]) <= 160
+                               and abs(pg - bg_rgb[1]) <= 160
+                               and abs(pb - bg_rgb[2]) <= 160)
+                    if darker and near_bg:
+                        real_shadow += 1
+
+        if fake:
+            add("error", "เฟรมหลอก/ว่าง",
+                f"{fake}/{len(cells)} เซลล์มีเนื้อน้อยเกิน (< 5% ของพื้นที่)")
+        else:
+            add("ok", "เฟรมหลอก/ว่าง", f"ไม่มี — {len(cells)} เซลล์มีเนื้อครบ")
+        if touch:
+            add("warn", "ตัวติดขอบ",
+                f"{len(touch)}/{len(cells)} เซลล์มีเนื้อล้ำเข้าแถบขอบ "
+                f"(เช่น {touch[0]}) — กันเผื่อกรอบ AI วาดหนาเกิน/ตัวใหญ่เกิน")
+        else:
+            add("ok", "ตัวติดขอบ", "ไม่มี — ทุกตัวมีช่องว่างรอบตัว")
+
+        if real_shadow:
+            add("warn", "เงาตกค้าง",
+                f"เจอพิกเซลเงา {real_shadow} px (เข้มกว่าพื้น + สีใกล้ bg) — "
+                f"รัน --remove-shadows หรือ gen ใหม่")
+        else:
+            add("ok", "เงาตกค้าง", "ไม่พบ")
+
+    # ---- จ) ตรวจกริดรวม --------------------------------------------------
+    if expect:
+        ex_cols, ex_rows = expect.lower().split("x")
+        ex = int(ex_cols) * int(ex_rows)
+        if not cells:
+            add("error", "กริด", "ไม่พบเส้นกริด — พื้นไม่ใช่สีเดียวตามสัญญา?")
+        elif len(cells) != ex:
+            add("error", "กริด", f"พบ {len(cells)} เซลล์ ≠ คาด {ex} ({expect})")
+        else:
+            add("ok", "กริด", f"ตรงสัญญา {expect} ({len(cells)} เซลล์)")
+    else:
+        if cells:
+            add("ok", "กริด", f"พบ {ncols}×{nrows} = {len(cells)} เซลล์ (ไม่ระบุ --expect-grid)")
+        else:
+            add("error", "กริด", "ไม่พบเส้นกริด — ระบุ --grid-bg ถูกต้องไหม?")
+
+    # ---- รายงาน ----------------------------------------------------------
+    summary = {"ok": 0, "warn": 0, "error": 0}
+    print("\n═══ รายงานตรวจภาพ (--check) ═══")
+    for it in issues:
+        summary[it["level"]] += 1
+        icon = {"ok": "✅", "warn": "⚠️", "error": "❌"}[it["level"]]
+        print(f"  {icon} [{it['check']}] {it['detail']}")
+    print(f"═══════════════════════════════")
+    print(f"  สรุป: ✅ {summary['ok']} · ⚠️ {summary['warn']} · ❌ {summary['error']}")
+    if summary["error"]:
+        print("  ผล: ❌ ไม่ผ่าน — อย่าเอาไปใช้ ตรวจภาพ/gen ใหม่")
+    elif summary["warn"]:
+        print("  ผล: ⚠️ ผ่านแบบมีข้อควรระวัง — ดู warn ก่อนใช้")
+    else:
+        print("  ผล: ✅ ผ่าน — พร้อมตัดเฟรมใช้จริง")
+    return issues, summary
+
+
+# ----------------------------------------------------------------------------
 # 4) ตัด + normalize เฟรม
 # ----------------------------------------------------------------------------
 
@@ -341,12 +570,26 @@ def main():
                     help="พื้นสีเดียวตามสัญญา PEP เช่น #00ff00 → ลบพื้นแบบ key + ตรวจกริด")
     ap.add_argument("--expect-grid", default=None,
                     help="กริดที่คาดจากพรอมต์ เช่น 4x4 — ตรวจว่าเฟรมตรงสัญญาไหม")
+    ap.add_argument("--check", action="store_true",
+                    help="โหมดตรวจภาพอย่างเดียว: รายงานเฟรมหลอก/เงา/กริด/ติดขอบ — ไม่สร้างไฟล์")
     args = ap.parse_args()
 
     img = Image.open(args.sheet)
     mode, bg = analyze_bg(img)
     print(f"ภาพ: {args.sheet} ({img.width}×{img.height}) · พื้นหลัง: {mode}"
           f"{f' {bg}' if bg else ''}")
+
+    # โหมด --check: รายงานตรวจภาพอย่างเดียว (ไม่ตัดเฟรม ไม่สร้างไฟล์)
+    if args.check:
+        if not args.grid_bg:
+            print("--check ต้องระบุ --grid-bg (สีพื้นตามสัญญา PEP เช่น #00ff00)")
+            return 2
+        hexv = args.grid_bg.lstrip("#")
+        gbg = tuple(int(hexv[i:i + 2], 16) for i in (0, 2, 4))
+        issues, summary = check_sheet(img, gbg, expect=args.expect_grid,
+                                      tol=args.tol,
+                                      expected_grid=args.expect_grid)
+        return 1 if summary["error"] else 0
 
     # โหมดกริดบังคับ (PEP): พื้นสีเดียว → ลบพื้น (key) ก่อน แล้วตรวจจับเซลล์
     # จากช่องว่างเนื้อ (วิธีเดียวกับ flood-fill mode) + ตรวจกริดว่าตรงสัญญาไหม
