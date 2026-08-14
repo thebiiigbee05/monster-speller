@@ -56,13 +56,21 @@
 | **ผู้บัญชาการสถานี** | ขาว-ทอง | เครื่องแบบอวกาศ · หมวกโปร่ง · อินเทอร์คอม | ⏳ Sprint 5 |
 | **หุ่นยนต์ RO-BOT** | เขียวมิ้นต์ | หุ่นกลมลอยได้ · หน้าจอแสดงตัวสะกด · หนวดเสาอากาศ | ⏳ Sprint 5 |
 
-**พรอมต์สากลสำหรับตัวละคร (เติมชื่อ/สี/เอกลักษณ์ ต่อท้าย):**
+**พรอมต์สากลสำหรับตัวละคร (PEP — เติมชื่อ/สี/เอกลักษณ์ ต่อท้าย):**
 ```text
-2D game character sprite for a children's educational space game "Monster Speller".
+2D game character sprite sheet for a children's educational space game "Monster Speller".
 FLAT 2D, NEON SCI-FI style, subtle pixel-art texture, crisp outline.
 [ชื่อ + สีหลัก + เอกลักษณ์จากตาราง]. Cute cartoon, kid-friendly, NOT scary.
-Background: transparent. No text, no logo, no watermark. Square canvas.
+LAYOUT: 2x2 grid = 4 cells (256x256 each), TOTAL IMAGE 512x512, NO extra margin.
+Grid lines at x/y = 0, 256, 512 must be pure background color at exact multiples
+of 256 px. 4px border around every cell using the background color.
+BACKGROUND: flat solid pure green #00ff00 ONLY (NO gradient, NO shadow, NO glow).
+Character must NOT touch cell borders (min 8px clearance) and must NOT contain
+dark shades of green. FORBIDDEN: NO text, NO letters, NO logo, NO watermark,
+NO extra characters, NO UI elements.
 ```
+> **คำสั่งตรวจ + ตัด (1 บรรทัดจบ):**
+> `ai-sprite-process.py <sheet.png> --name char --cell 256 --out-dir out/ --grid-bg "#00ff00" --expect-grid 2x2 --require-check`
 
 ---
 
@@ -81,7 +89,16 @@ Background: transparent. No text, no logo, no watermark. Square canvas.
 | เกย | แดง #ff3b3b | ดาว 4 แฉก |
 | เกอว | น้ำตาลส้ม #d97706 | หกเหลี่ยม |
 
-**พรอมต์:** `8 individual game bullet icons, neon colors on transparent background, glowing energy orbs with Thai alphabet letter shapes, flat 2D, kid-friendly, 64x64 each, no text no watermark`
+**พรอมต์ (PEP — กริด 4×2):**
+```text
+8 individual game bullet icons for "Monster Speller" (Thai alphabet reading game).
+NEON glowing energy orbs, one per Thai consonant class letter shape, flat 2D,
+kid-friendly. LAYOUT: 4x2 grid = 8 cells (64x64 each), TOTAL 256x128 px,
+NO margin. Grid lines at exact multiples of 64 px, pure background color.
+4px border per cell. BACKGROUND: flat solid pure green #00ff00 ONLY.
+NO shadow, NO text, NO letters, NO watermark, NO glow outside the orb.
+```
+> **คำสั่ง:** `ai-sprite-process.py <bullets.png> --name bullet --cell 64 --out-dir assets/ui/bullets/ --grid-bg "#00ff00" --expect-grid 4x2 --require-check`
 
 ### 15.4.2 ชิ้นส่วนอัปเกรดยาน (4 ชิ้น — Sprint 4)
 
@@ -92,7 +109,15 @@ Background: transparent. No text, no logo, no watermark. Square canvas.
 | โล่พลังงาน | หกเหลี่ยมโปร่ง | เงาสีเขียว |
 | เซนเซอร์แม่นยำ | จานดาวเทียม | จุดเรดาร์กะพริบ |
 
-**พรอมต์:** `4 glowing spaceship upgrade parts (engine, twin laser, energy shield, sensor dish), floating with neon glow, flat 2D sci-fi, transparent background, gold cyan pink accents, kid-friendly, 64x64 each, no text no watermark`
+**พรอมต์ (PEP — กริด 2×2):**
+```text
+4 glowing spaceship upgrade parts for "Monster Speller" (engine, twin laser,
+energy shield, sensor dish). Flat 2D sci-fi, neon glow, gold/cyan/pink accents,
+kid-friendly. LAYOUT: 2x2 grid = 4 cells (64x64 each), TOTAL 128x128 px,
+NO margin. Grid lines at 0/64/128, pure background color. 4px border per cell.
+BACKGROUND: flat solid pure green #00ff00 ONLY. NO shadow, NO text, NO watermark.
+```
+> **คำสั่ง:** `ai-sprite-process.py <parts.png> --name part --cell 64 --out-dir assets/items/parts/ --grid-bg "#00ff00" --expect-grid 2x2 --require-check`
 
 ### 15.4.3 ไอเท็มเสริมพลัง (Power-ups — เสนอเพิ่ม)
 
@@ -103,17 +128,28 @@ Background: transparent. No text, no logo, no watermark. Square canvas.
 | กระสุนกระจาย (Spread) | ยิง 3 ทิศ 3 วิ | ส้ม-เหลือง |
 | ดาวคะแนน 2× | คะแนนคูณ 2 | ทอง |
 
-**พรอมต์:** `4 collectible power-up icons floating in space (pierce bullet, slow-mo clock, spread shot, 2x score star), neon glowing, flat 2D sci-fi, transparent background, kid-friendly, 64x64 each, no text no watermark`
+**พรอมต์ (PEP — กริด 2×2):**
+```text
+4 collectible power-up icons for "Monster Speller" (pierce bullet, slow-mo clock,
+spread shot, 2x score star). Neon glowing, flat 2D sci-fi, kid-friendly.
+LAYOUT: 2x2 grid = 4 cells (64x64 each), TOTAL 128x128 px, NO margin.
+Grid lines at 0/64/128, pure background color. 4px border per cell.
+BACKGROUND: flat solid pure green #00ff00 ONLY. NO shadow, NO text, NO watermark.
+```
+> **คำสั่ง:** `ai-sprite-process.py <powerups.png> --name powerup --cell 64 --out-dir assets/items/powerups/ --grid-bg "#00ff00" --expect-grid 2x2 --require-check`
 
 ### 15.4.4 เอฟเฟกต์และวัตถุประกอบฉาก
 
 | รายการ | ใช้ที่ไหน | พร้อมต์ |
 |---|---|---|
-| ดาว 4 แฉกเรืองแสง | ฉากเกม/Hub | `glowing 4-pointed sparkle star, neon white-gold, transparent background, 32x32` |
-| อนุภาคระเบิด (เขียว/แดง) | ตอบถูก/ผิด | `burst explosion particles, neon green + magenta sparks, flat 2D, transparent` |
-| คอนเฟตตี้ชนะ | สรุปโหมดเรียนรู้ | `colorful confetti falling, flat 2D, kid-friendly, transparent` |
-| หัวใจ/ดาว HUD | HUD | `neon heart icon and star icon, flat 2D, cyan pink gold, 32x32, no text` |
-| การ์ดคำศัพท์ | เหนือหัวมอนสเตอร์ | `small rounded game card with Thai word placeholder, neon border, flat 2D` |
+| ดาว 4 แฉกเรืองแสง | ฉากเกม/Hub | `glowing 4-pointed sparkle star, neon white-gold, flat 2D, on pure green #00ff00 background, 32x32, no shadow, no text` |
+| อนุภาคระเบิด (เขียว/แดง) | ตอบถูก/ผิด | `burst explosion particles, neon green + magenta sparks, flat 2D, on pure green #00ff00 background, no text` |
+| คอนเฟตตี้ชนะ | สรุปโหมดเรียนรู้ | `colorful confetti falling, flat 2D, kid-friendly, on pure green #00ff00 background` |
+| หัวใจ/ดาว HUD | HUD | `neon heart icon and star icon, flat 2D, cyan pink gold, 32x32, on pure green #00ff00 background, no text` |
+| การ์ดคำศัพท์ | เหนือหัวมอนสเตอร์ | `small rounded game card with Thai word placeholder, neon border, flat 2D, on pure green #00ff00 background` |
+>
+> **คำสั่ง (รวมเอฟเฟกต์เป็นชุด — กริดตามจำนวนไอเท็ม เช่น 5 ในแถวเดียว):**
+> `ai-sprite-process.py <fx.png> --name fx --cell 32 --out-dir assets/ui/fx/ --grid-bg "#00ff00" --expect-grid 1x5 --require-check`
 
 ---
 
@@ -189,16 +225,25 @@ No characters/monsters/text/logo/watermark. 16:9, 960x540.
 
 ---
 
-## 15.8 พรอมต์: สไปรต์มอนสเตอร์เดี่ยว (ใช้แทน pixel-art ได้ — ขนาด 128×128/เฟรม)
+## 15.8 พรอมต์: สไปรต์มอนสเตอร์เดี่ยว (PEP — ใช้แทน pixel-art ได้)
+
+> 🔗 **พรอมต์ PEP ครบ 4 มอนสเตอร์ + คำสั่ง Python พร้อมใช้:
+> [`design/art/pep-prompts-monsters.md`](../design/art/pep-prompts-monsters.md)**
+> (พื้น `#00ff00` · กริด 4×4 128px · `--expect-grid 4x4 --require-check`)
 
 ```text
 2D game monster sprite sheet for "Monster Speller", frame-by-frame animation.
 FLAT 2D, NEON SCI-FI, subtle pixel-art texture, crisp dark outline.
 [ชื่อมอนสเตอร์ + สี + เอกลักษณ์]. 6 frames in a row: walk1, walk2 (legs
 alternating), stun (X eyes + tongue), explode1, explode2 (burst), friendly
-(smile + blush). Cute cartoon, kid-friendly, NOT scary. Transparent
-background. No text, no logo, no watermark. Each cell 128x128.
+(smile + blush). Cute cartoon, kid-friendly, NOT scary.
+LAYOUT: 1x6 grid = 6 cells (128x128 each), TOTAL 768x128 px, NO margin.
+Grid lines at exact multiples of 128 px, pure background color. 4px border
+per cell. BACKGROUND: flat solid pure green #00ff00 ONLY. NO shadow,
+NO glow, NO text, NO logo, NO watermark. Character must NOT touch cell
+borders (min 8px clearance).
 ```
+> **คำสั่ง:** `ai-sprite-process.py <monster-sheet.png> --name monster --cell 128 --out-dir out/ --grid-bg "#00ff00" --expect-grid 1x6 --require-check`
 
 > ⚠️ **ข้อควรระวัง:** สไปรต์จาก AI มักได้เฟรมไม่ตรงตำแหน่ง/ไม่ loop สมูท
 > → ใช้เป็นแนวอ้างอิงแล้ววาดทับด้วย `scripts/generate-sprites.mjs` หรือ
@@ -217,47 +262,53 @@ flat 2D sci-fi, kid-friendly. Dark navy palette matching #0b0f2a.
 No characters, no text, no logo, no watermark. 16:9, 1280x720.
 ```
 
-**ผู้บัญชาการสถานี (portrait):**
+**ผู้บัญชาการสถานี (portrait) — PEP:**
 ```text
 2D game character portrait (bust) of a friendly space station commander for
 "Monster Speller". White-gold uniform, transparent helmet, warm smile,
 communicator headset. FLAT 2D, NEON SCI-FI, subtle pixel texture, crisp
-outline, kid-friendly. Background transparent. No text, no logo, no
-watermark. Square 256x256.
+outline, kid-friendly. Square 256x256. LAYOUT: single character centered,
+4px border, TOTAL 256x256 px. BACKGROUND: flat solid pure green #00ff00 ONLY.
+NO shadow, NO text, NO logo, NO watermark. Character must NOT touch edges.
 ```
+> **คำสั่ง:** `ai-sprite-process.py <commander.png> --name commander --cell 256 --out-dir assets/characters/ --grid-bg "#00ff00" --expect-grid 1x1 --require-check`
 
-**หุ่นยนต์ RO-BOT (ผู้ช่วยสอน):**
+**หุ่นยนต์ RO-BOT (ผู้ช่วยสอน) — PEP:**
 ```text
 2D game character of a cute floating tutor robot "RO-BOT" for "Monster
 Speller". Round mint-green body, floating, screen face showing a Thai letter,
 antenna with glowing tip, small friendly arms. FLAT 2D, NEON SCI-FI,
-kid-friendly. Transparent background. No text, no logo, no watermark.
-Square 256x256.
+kid-friendly. Square 256x256. LAYOUT: single character centered, 4px border,
+TOTAL 256x256 px. BACKGROUND: flat solid pure green #00ff00 ONLY. NO shadow,
+NO text, NO logo, NO watermark. Character must NOT touch edges.
 ```
+> **คำสั่ง:** `ai-sprite-process.py <robot.png> --name robot --cell 256 --out-dir assets/characters/ --grid-bg "#00ff00" --expect-grid 1x1 --require-check`
 
 ---
 
 ## 15.10 ตารางรวมพรอมต์ทั้งหมด (Quick Copy Sheet)
 
-| สินทรัพย์ | ไฟล์ปลายทาง | พรอมต์ |
-|---|---|---|
-| พื้นหลังเกม | `bg/space-bg.png` | 15.5 |
-| พื้นหลัง Hub | `bg/hub-bg.png` | 15.6 |
-| พื้นหลังวิกฤต | `bg/crisis-galaxy-bg.png` | 15.7A |
-| พื้นหลังป้อม | `bg/demon-fortress-bg.png` | 15.7B |
-| พื้นหลังชนะ | `bg/golden-heaven-bg.png` | 15.7C |
-| สไปรต์มอนสเตอร์ (อ้างอิง) | `sprites/monsters-sheet.png` | 15.8 |
-| กระสุน 8 มาตรา | `assets/ui/bullets/` | 15.4.1 |
-| ชิ้นส่วนยาน 4 ชิ้น | `assets/items/parts/` | 15.4.2 |
-| ไอเท็มเสริมพลัง | `assets/items/powerups/` | 15.4.3 |
-| ฉาก Hangar | `bg/hangar-bg.png` | 15.9 |
-| ผู้บัญชาการ/RO-BOT | `assets/characters/` | 15.9 |
+| สินทรัพย์ | ไฟล์ปลายทาง | พรอมต์ | ประเภท | PEP? |
+|---|---|---|---|---|
+| พื้นหลังเกม | `bg/space-bg.png` | 15.5 | background | — |
+| พื้นหลัง Hub | `bg/hub-bg.png` | 15.6 | background | — |
+| พื้นหลังวิกฤต | `bg/crisis-galaxy-bg.png` | 15.7A | background | — |
+| พื้นหลังป้อม | `bg/demon-fortress-bg.png` | 15.7B | background | — |
+| พื้นหลังชนะ | `bg/golden-heaven-bg.png` | 15.7C | background | — |
+| สไปรต์มอนสเตอร์ (อ้างอิง) | `sprites/monsters-sheet.png` | 15.8 / pep-prompts | sprite | ✅ ต้อง PEP |
+| กระสุน 8 มาตรา | `assets/ui/bullets/` | 15.4.1 | sprite | ✅ ต้อง PEP |
+| ชิ้นส่วนยาน 4 ชิ้น | `assets/items/parts/` | 15.4.2 | sprite | ✅ ต้อง PEP |
+| ไอเท็มเสริมพลัง | `assets/items/powerups/` | 15.4.3 | sprite | ✅ ต้อง PEP |
+| เอฟเฟกต์/ไอคอน HUD | `assets/ui/fx/` | 15.4.4 | sprite | ✅ ต้อง PEP |
+| ฉาก Hangar | `bg/hangar-bg.png` | 15.9 | background | — |
+| ผู้บัญชาการ/RO-BOT | `assets/characters/` | 15.9 | sprite | ✅ ต้อง PEP |
 
 ---
 
 ## 15.11 ข้อกำหนดการส่งมอบ (DoD สำหรับงานกราฟิก)
 
 - [ ] ขนาด/สัดส่วนตรงตามตาราง 15.1 (บังคับ)
+- [ ] **งาน sprite ทุกชิ้นผ่าน `--check`** (พื้น `#00ff00` + `--expect-grid`) → exit 0 (ดู PEP spec)
 - [ ] พื้นที่ว่างสำหรับเกมเพลย์ (มุมขวาล่าง/กลางล่าง) ยังโล่ง
 - [ ] จานสีตรงธีม 6 สี — ไม่มีสีหลุดธีม (เทียบ eyedropper กับตารางสี)
 - [ ] ไม่มีตัวหนังสือ/โลโก้/ลายน้ำ (AI ชอบแอบใส่)
