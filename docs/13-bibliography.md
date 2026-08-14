@@ -93,3 +93,6 @@ Schwaber, K., & Sutherland, J. (2020). *The Scrum Guide: The definitive guide to
 ---
 
 *รวบรวมโดยทีม MONSTER SPELLER — จะเพิ่มแหล่งอ้างอิงงานวิจัยภาษาไทยเฉพาะด้านการสะกดคำเมื่ออ้างอิงถึงงานวิจัยต้นฉบับที่ผู้ใช้ให้มา*
+---
+
+> ⬆️ [กลับไปสารบัญ](00-cover-and-toc.md)

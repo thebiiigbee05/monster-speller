@@ -101,3 +101,6 @@ pair programming, test-first สำหรับระบบคะแนน/ม�
 | Unit test ระบบตรวจมาตรา (ถูก/ผิด) | 🧪 | 1 | 📥 Backlog |
 
 > 🔗 **เชื่อมโยง:** แผน Sprint/User Stories → บทที่ 8 · เกณฑ์ QA → บทที่ 10
+---
+
+> ⬆️ [กลับไปสารบัญ](00-cover-and-toc.md)
