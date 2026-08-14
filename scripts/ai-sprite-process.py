@@ -303,6 +303,69 @@ def detect_frames(img, threshold_ratio=0.15, min_gap=1):
     frames.sort(key=lambda f: (f["y"], f["x"]))
     return frames
 
+def frame_signature(img, box, size=16):
+    """ลายเซ็นของเฟรม (normalized thumbnail) — กันตำแหน่งตัวขยับภายในกล่อง
+    คืน list RGB 16x16 ใช้เทียบความเหมือนระหว่างเฟรม (0 = เหมือน 100 = ต่าง)"""
+    x0, y0, w, h = box["x"], box["y"], box["w"], box["h"]
+    frame = img.crop((x0, y0, x0 + w, y0 + h))
+    bbox = frame.getbbox()
+    if not bbox:
+        return None
+    frame = frame.crop(bbox).convert("RGB")
+    frame = frame.resize((size, size), Image.LANCZOS)
+    return [c for px in frame.getdata() for c in px]
+
+
+def sig_diff(a, b):
+    """เปอร์เซ็นต์ต่างระหว่าง 2 ลายเซ็น (0-100)"""
+    return sum(abs(x - y) for x, y in zip(a, b)) / (len(a) * 255) * 100
+
+
+def drop_flat_frames(img, frames, ratio=0.5):
+    """กรองเฟรมแบน/เงาล้วน: ความสูงเนื้อ < ratio × ค่ากลาง(median) ของทุกเฟรม
+    ใช้จับ 'แถบเงา' ที่ AI วาดใต้ตัวแล้วตัดเป็นเฟรมหลอก (h ~10-15% ของตัวจริง)
+    คืน (kept, dropped) — dropped = [(index, h, median_h)]"""
+    heights = []
+    for box in frames:
+        bbox = img.crop((box["x"], box["y"], box["x"] + box["w"], box["y"] + box["h"])).getbbox()
+        heights.append((bbox[3] - bbox[1]) if bbox else 0)
+    if not heights:
+        return frames, []
+    median = sorted(heights)[len(heights) // 2]
+    kept, dropped = [], []
+    for i, (box, h) in enumerate(zip(frames, heights)):
+        if median > 0 and h < median * ratio:
+            dropped.append((i, h, median))
+        else:
+            kept.append(box)
+    return kept, dropped
+
+
+def dedupe_frames(img, frames, threshold=3.0):
+    """ลบเฟรมซ้ำ (AI แปะท่าเดิมหลายรอบ): เทียบ normalized signature
+    ต่าง < threshold% ถือเป็นท่าเดียวกัน — เก็บตัวแรก คืน (kept, removed_pairs)
+    removed_pairs = [(kept_idx_original, dup_idx_original, diff%)]"""
+    sigs = [frame_signature(img, box) for box in frames]
+    kept_idx, removed = [], []
+    for i in range(len(frames)):
+        dup_of = None
+        for k in kept_idx:
+            a, b = sigs[k], sigs[i]
+            if a is None or b is None:
+                continue
+            d = sig_diff(a, b)
+            if d < threshold:
+                dup_of = k
+                break
+        if dup_of is None:
+            kept_idx.append(i)
+        else:
+            d = sig_diff(sigs[dup_of], sigs[i])
+            removed.append((dup_of, i, round(d, 1)))
+    kept = [frames[i] for i in kept_idx]
+    return kept, removed
+
+
 # ----------------------------------------------------------------------------
 # 3b) โหมด --check: รายงานตรวจภาพก่อนใช้ (ไม่ตัดเฟรม ไม่สร้างไฟล์)
 # ----------------------------------------------------------------------------
@@ -587,6 +650,14 @@ def main():
                     help="พื้นสีเดียวตามสัญญา PEP เช่น #00ff00 → ลบพื้นแบบ key + ตรวจกริด")
     ap.add_argument("--expect-grid", default=None,
                     help="กริดที่คาดจากพรอมต์ เช่น 4x4 — ตรวจว่าเฟรมตรงสัญญาไหม")
+    ap.add_argument("--drop-flat", action="store_true",
+                    help="กรองเฟรมแบน/เงาล้วน (ความสูงเนื้อ < median×ratio) ก่อนบันทึก")
+    ap.add_argument("--flat-ratio", type=float, default=0.5,
+                    help="เกณฑ์เฟรมแบน เทียบ median (default 0.5 = สูงไม่ถึงครึ่ง)")
+    ap.add_argument("--dedupe", action="store_true",
+                    help="ลบเฟรมซ้ำ (ท่าเดิมแปะหลายรอบ) — เก็บท่าที่ต่างกันจริง")
+    ap.add_argument("--dup-threshold", type=float, default=3.0,
+                    help="เกณฑ์ถือว่า 'ท่าเดียวกัน' (%% ต่างของ normalized ภาพ, default 3.0)")
     ap.add_argument("--check", action="store_true",
                     help="โหมดตรวจภาพอย่างเดียว: รายงานเฟรมหลอก/เงา/กริด/ติดขอบ — ไม่สร้างไฟล์")
     ap.add_argument("--require-check", action="store_true",
@@ -675,6 +746,31 @@ def main():
             return 1
         print(f"พบเฟรม {len(frames)} ตัว")
 
+    # ขั้นหลังตัดเฟรม: กรองเฟรมแบน/เงา + ลบเฟรมซ้ำ (ก่อนนับกริด/บันทึก)
+    if args.drop_flat:
+        frames, dropped = drop_flat_frames(img, frames, ratio=args.flat_ratio)
+        if dropped:
+            print(f"🧹 drop-flat: ลบเฟรมแบน {len(dropped)} ตัว (สูง < "
+                  f"{args.flat_ratio:.0%} × median)")
+            for i, h, med in dropped:
+                print(f"   - เฟรม#{i}: สูง {h}px (median {med}px) — เงา/แถบไร้สี")
+            print(f"   เหลือเฟรม {len(frames)} ตัว")
+        else:
+            print("🧹 drop-flat: ไม่พบเฟรมแบน (ทุกเฟรมสูงพอ) ✅")
+    if args.dedupe:
+        frames, removed = dedupe_frames(img, frames, threshold=args.dup_threshold)
+        if removed:
+            print(f"🔁 dedupe: ลบเฟรมซ้ำ {len(removed)} ตัว (ต่าง < "
+                  f"{args.dup_threshold}% — ท่าเดียวกัน)")
+            for k, i, d in removed:
+                print(f"   - เฟรม#{i} ซ้ำกับ #{k} (ต่าง {d}%)")
+            print(f"   เหลือท่าจริง {len(frames)} ตัว — ตรวจว่าครบ walk cycle ไหม")
+        else:
+            print(f"🔁 dedupe: ไม่พบเฟรมซ้ำ (ทุกท่าแตกต่าง ≥ {args.dup_threshold}%) ✅")
+    if not frames:
+        print("⛔ หลังกรองแล้วไม่เหลือเฟรม — ภาพมีแค่เงา/พื้น? ตรวจภาพด้วยสายตา")
+        return 1
+
     # คำนวณกริดโดยประมาณ (แถวจาก y ที่ใกล้กัน)
     ys = sorted({f["y"] for f in frames})
     rows, cur = 0, None
@@ -703,7 +799,7 @@ def main():
         "frameFiles": frame_files,
         "animationFps": 8,
         "loop": True,
-        "note": "สร้างโดย ai-sprite-process.py — ตรวจด้วยสายตาก่อนใช้",
+        "note": "สร้างโดย ai-sprite-process.py — ตรวจด้วยสายตาก่อนใช้"
     }
     mpath = os.path.join(args.out_dir, f"{args.name}.json")
     with open(mpath, "w", encoding="utf-8") as fh:

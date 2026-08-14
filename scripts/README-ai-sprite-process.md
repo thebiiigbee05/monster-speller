@@ -22,6 +22,7 @@
 ./.venv-scripts/Scripts/python.exe scripts/ai-sprite-process.py <sheet.png> \
     --name walker --cell 64 --out-dir out/ \
     --grid-bg "#00ff00" --expect-grid 4x4 --require-check
+    --drop-flat --dedupe        # ← เพิ่ม: กรองเงาเฟรมหลอก + ลบเฟรมซ้ำ
 
 # ตรวจอย่างเดียว:
 ./.venv-scripts/Scripts/python.exe scripts/ai-sprite-process.py <sheet.png> \
@@ -73,6 +74,10 @@
 | `--expect-grid` | — | กริดที่คาด เช่น `4x4` → ตรวจเฟรมตรงสัญญาไหม (จับเฟรมหลอก/หาย) |
 | `--check` | off | โหมดตรวจภาพอย่างเดียว (ไม่ตัดเฟรม): รายงานเฟรมหลอก/เงา/กริด/ติดขอบ + exit code |
 | `--require-check` | off | ตรวจก่อนตัดเฟรม: มี error → หยุด (exit 1 ไม่สร้างไฟล์) · ผ่าน/เตือน → ตัดเฟรม + manifest ต่อ |
+| `--drop-flat` | off | กรองเฟรมแบน/เงาล้วน (สูง < median×ratio) — จับแถบเงาที่ AI วาดใต้ตัวแล้วตัดเป็นเฟรมหลอก |
+| `--flat-ratio` | 0.5 | เกณฑ์เฟรมแบน เทียบ median ความสูงเนื้อ (0.5 = สูงไม่ถึงครึ่งถือว่าแบน) |
+| `--dedupe` | off | ลบเฟรมซ้ำ (AI แปะท่าเดิมหลายรอบ) — เทียบ normalized ภาพ เก็บท่าที่ต่างกันจริง |
+| `--dup-threshold` | 3.0 | เกณฑ์ถือว่า 'ท่าเดียวกัน' (% ต่างของ normalized ภาพ, default 3.0) |
 | `--tol` | `28` | tolerance ลบพื้น (มาก = ลบแรงขึ้น) |
 | `--remove-shadows` | off | ลบเงาใต้ตัว (แถวล่างที่ไร้สีสัน + เข้มกว่าพื้น) |
 | `--threshold` | `0.15` | เกณฑ์ "เนื้อ" ตรวจจับเฟรม |
@@ -99,6 +104,8 @@
 | sheet ละเมิด 512×512 (ว่าง + เงา + ตัวใหญ่) | **--check** | ❌ 1 + ⚠️ 2 · exit 1 — แยกถูก/ผิดครบทุกข้อ |
 | GOOD 512×512 | **--require-check** | ✅ ผ่าน → ตัดเฟรม 16 + manifest · exit 0 |
 | BAD 512×512 | **--require-check** | ❌ ตรวจไม่ผ่าน → หยุด ไม่สร้างไฟล์ · exit 1 |
+| walker-sheet 1254px จริง (AI ไม่ตรงสัญญา) | **--drop-flat --dedupe** | 32 เฟรม → กรองเงา 16 → dedupe เหลือ 2 ท่าจริง · manifest 2 เฟรม · exit 0 |
+| GOOD 512×512 (ท่าเดียวแปะ 4×4) | **--drop-flat --dedupe** | ไม่มีเฟรมแบน ✅ · dedupe ลบ 12 ตัวซ้ำ เหลือ 4 ท่าจริง · exit 0 |
 | AI sheet พื้นไล่เฉด 4 ตัว + เงา + ตัวมีรูกลาง | flood | ✅ 4 เฟรม · เงา 1078 px ลบ · รูกลางตัวไม่ถูกเจาะ |
 | sheet จริงของเกม (โปร่งใส 40 เฟรม) | flood `--dry` | ✅ 4×10 (ผ่าน sprite-frame-detect.py) |
 
