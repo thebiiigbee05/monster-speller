@@ -94,6 +94,42 @@ git push -u origin main
 - `src/data/wordBank.json` — **232 คำ ครบ 8 มาตรา** (ตรง 186 / ไม่ตรง 46) พร้อมฟิลด์: คำเต็ม, ตัวสะกด, มาตรา, ตรง/ไม่ตรง, ระดับความยาก 1–3, แหล่งอ้างอิง
 - `src/data/README.md` — คำอธิบายฟิลด์ + วิธีใช้ในเกม + ข้อควรปฏิบัติ (ตรวจ IOC, การสุ่ม, สัดส่วนตามด่าน)
 
+## 🎨 Quick Start: เริ่มงานกราฟิกยังไง (ทุกงาน sprite ต้องทำตาม PEP)
+
+> **หลักการ:** ภาพที่ AI สร้าง**ไม่ใช่พื้นหลังโปร่งใส** → ต้องประมวลผลผ่าน Python
+> ก่อนเข้าเกม สเปกเต็ม: [`design/prompt-processability-spec.md`](design/prompt-processability-spec.md)
+
+**4 ขั้นตอน (ทุกงาน sprite):**
+
+```
+1. คัดลอกพรอมต์ PEP → วางใน AI (ChatGPT/runcomfy/ฯลฯ) → สร้างภาพ
+2. วาง PNG ลงโปรเจกต์ (เช่น public/assets/ai/<name>.png)
+3. รันคำสั่ง 1 บรรทัดจบ (ตรวจก่อน → ผ่านจึงตัดเฟรม + manifest):
+   ./.venv-scripts/Scripts/python.exe scripts/ai-sprite-process.py <sheet.png> \
+       --name <name> --cell <SIZE> --out-dir <ปลายทาง>/ \
+       --grid-bg "#00ff00" --expect-grid <COLS>x<ROWS> --require-check
+   (exit 0 = ผ่าน + ได้เฟรม · exit 1 = ตรวจไม่ผ่าน → gen ใหม่)
+4. เปิดภาพเฟรมด้วยตา 1 ครั้ง → โหลด manifest ในเกม (SpriteRenderer บท 7.6)
+```
+
+**ไฟล์พรอมต์ PEP ทั้งหมด (คัดลอกไป AI ได้ทันที):**
+
+| งาน | ไฟล์ | กริด (`--expect-grid`) |
+|---|---|---|
+| สไปรต์มอนสเตอร์ 4 ชนิด | [`design/art/pep-prompts-monsters.md`](design/art/pep-prompts-monsters.md) | `4x4` |
+| เทิร์นอราวด์ 4 มุม | [`design/art/turnaround-prompts.md`](design/art/turnaround-prompts.md) | `2x2` |
+| กระสุน 8 มาตรา / ชิ้นส่วน / ไอเท็ม / ไอคอน | [`docs/15-chapter-15-graphics-assets.md`](docs/15-chapter-15-graphics-assets.md) (15.4) | `4x2` / `2x2` / `1x5` |
+| เทมเพลตสินทรัพย์เล็ก (เติมเอง) | docs/15 → 15.4.5 | ตามตาราง |
+| พื้นหลัง / ฉาก | docs/15 → 15.5–15.7 | — (ไม่ต้อง PEP) |
+| Workflow ตรวจภาพเต็ม | [`docs/06-chapter-6-ui-ux-graphics.md`](docs/06-chapter-6-ui-ux-graphics.md) → 6.7 | — |
+
+**เครื่องมือตรวจ:**
+- `scripts/ai-sprite-process.py` — ลบพื้น → ตัดเฟรม → manifest (`--check`/`--require-check`/`--remove-shadows`)
+- `scripts/sprite-frame-detect.py` — ตรวจจับขอบเฟรมจากช่องว่าง (ภาพไม่มีกริด)
+- `tests/check-links.py` — ตรวจลิงก์เอกสาร (รันหลังแก้ docs)
+
+---
+
 ## 🃏 การ์ด AR (โหมดสแกน)
 
 - `design/ar-cards/ar-cards-spec.md` — สเปกฉบับเต็ม (ขนาด/มาร์กเกอร์ AR.js/พิมพ์/แสง/QA)
@@ -111,8 +147,8 @@ git push -u origin main
 |---|---|
 | 📥 Backlog | — |
 | 🟡 Ready | — |
-| 🟠 In Progress | ปรับปรุงเอกสารโครงการ v1.1 ตามข้อความต้นฉบับ |
+| 🟠 In Progress | — |
 | 🔵 Review | — |
-| ✅ Done | — |
+| ✅ Done | เอกสารกราฟิกครบวงจร PEP (สเปก + พรอมต์มอนสเตอร์/เทิร์นอราวด์/สินทรัพย์เล็ก + workflow 6.7 + ตรวจลิงก์) |
 
 *ดูรายละเอียดบอร์ดเต็มในบทที่ 9*
