@@ -26,10 +26,11 @@ const OUT_DIR = 'public/assets/sprites/ai';
 
 /** แผนงานสินทรัพย์ — เพิ่ม/แก้ตรงนี้ได้ (name = ชื่อ manifest, cell, grid) */
 const PLANS = [
-  { name: 'walker', cell: 128, grid: '4x1' },
-  { name: 'runner', cell: 128, grid: '4x1' },
-  { name: 'tank',   cell: 128, grid: '4x1' },
-  { name: 'boss',   cell: 128, grid: '4x1' },
+  // poses = ชื่อท่าเรียงตามกริด (อิง pep-prompts-monsters.md §ท่าทาง)
+  { name: 'walker', cell: 128, grid: '4x1', poses: 'contact,down,passing,up' },
+  { name: 'runner', cell: 128, grid: '4x1', poses: 'reach,stride,passing,kick' },
+  { name: 'tank',   cell: 128, grid: '4x1', poses: 'sway-left,squat,sway-right,rise' },
+  { name: 'boss',   cell: 128, grid: '4x1', poses: 'stomp-left,low,stomp-right,high' },
 ];
 
 function runProcess(args, cwd = process.cwd()) {
@@ -88,6 +89,7 @@ async function main() {
       '--out-dir', path.join(OUT_DIR, p.name),
       '--grid-bg', '#00ff00',
       '--expect-grid', p.grid,
+      '--pose-names', p.poses,
       '--require-check', '--drop-flat', '--dedupe',
     ];
     const r = await runProcess(args);
@@ -110,6 +112,9 @@ async function main() {
     if (r.code === 0 && r.manifest) {
       frames = String(r.manifest.frames).padEnd(8);
       note = `${r.manifest.rows}×${r.manifest.cols} กริด · ${r.manifest.source}`;
+      if (r.manifest.poseWarning) {
+        note += ` ⚠️${r.manifest.frames}/${(r.manifest.poses || []).length} ท่า`;
+      }
       if (note.length > 36) note = note.slice(0, 33) + '...';
     } else {
       const lines = (r.out + r.err).split('\n').filter((l) => l.trim());

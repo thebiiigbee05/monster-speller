@@ -104,6 +104,21 @@ def check_one(path):
         warnings.append(f"rows×cols ({m['rows']}×{m['cols']}={m['rows']*m['cols']}) "
                         f"ไม่เท่า frames ({m['frames']}) — หลัง dedupe/กรองได้")
 
+    # poseMap (ถ้ามี): ทุกท่าอ้างเฟรมที่อยู่จริง + จำนวนท่าครบ/เตือน
+    if "poseMap" in m:
+        pm = m["poseMap"]
+        if not isinstance(pm, dict):
+            errors.append("poseMap ต้องเป็น object {ชื่อท่า: ไฟล์เฟรม}")
+        else:
+            not_in = [v for v in pm.values() if v not in m["frameFiles"]]
+            if not_in:
+                errors.append(f"poseMap อ้างเฟรมที่ไม่อยู่ใน frameFiles: {not_in[:5]}")
+            if "poses" in m and set(pm.keys()) != set(m["poses"]):
+                warnings.append("poseMap keys ไม่ตรงกับ poses")
+            if len(pm) < len(m["poses"]):
+                warnings.append(f"ท่าไม่ครบ: {len(pm)}/{len(m['poses'])} "
+                                f"({', '.join(m['poses'])[:40]}...)")
+
     return errors, warnings
 
 

@@ -759,6 +759,9 @@ def main():
                     help="ลบเฟรมซ้ำ (ท่าเดิมแปะหลายรอบ) — เก็บท่าที่ต่างกันจริง")
     ap.add_argument("--dup-threshold", type=float, default=3.0,
                     help="เกณฑ์ถือว่า 'ท่าเดียวกัน' (%% ต่างของ normalized ภาพ, default 3.0)")
+    ap.add_argument("--pose-names", default="contact,down,passing,up",
+                    help="ชื่อท่าเรียงตามลำดับกริด (คั่น ,) เช่น contact,down,passing,up — "
+                         "เขียน poseMap ใน manifest + เตือนถ้าท่าไม่ครบตามสัญญา")
     ap.add_argument("--check", action="store_true",
                     help="โหมดตรวจภาพอย่างเดียว: รายงานเฟรมหลอก/เงา/กริด/ติดขอบ — ไม่สร้างไฟล์")
     ap.add_argument("--require-check", action="store_true",
@@ -895,6 +898,24 @@ def main():
         frame_files.append(fname)
         print(f"  {fname}: กล่อง {box} → {args.cell}×{args.cell}")
 
+    # mapping ท่าทาง: เซลล์ในกริดเรียง = pose ใน --pose-names (ตามสัญญา PEP:
+    # walk-cycle-spec.md — contact/down/passing/up). หลัง drop-flat/dedupe
+    # ท่าที่เหลืออาจน้อยกว่าสัญญา → เตือน + เขียน poseWarning ใน manifest
+    poses = [p.strip() for p in args.pose_names.split(",") if p.strip()]
+    pose_map, missing_poses = {}, []
+    for i, pname in enumerate(poses):
+        if i < len(frame_files):
+            pose_map[pname] = frame_files[i]
+        else:
+            missing_poses.append(pname)
+    pose_warning = None
+    if missing_poses:
+        pose_warning = (
+            f"ท่าไม่ครบตามสัญญา {len(poses)} ท่า ({', '.join(poses)}) — "
+            f"เหลือ {len(frame_files)} ({', '.join(frame_files)}); "
+            f"ขาด: {', '.join(missing_poses)} — gen ใหม่หรือตรวจด้วยสายตา")
+        print(f"⚠️  {pose_warning}")
+
     manifest = {
         "asset": args.name,
         "source": os.path.basename(args.sheet),
@@ -903,10 +924,14 @@ def main():
         "rows": rows,
         "cols": cols,
         "frameFiles": frame_files,
+        "poses": poses,
+        "poseMap": pose_map,
         "animationFps": 8,
         "loop": True,
         "note": "สร้างโดย ai-sprite-process.py — ตรวจด้วยสายตาก่อนใช้"
     }
+    if pose_warning:
+        manifest["poseWarning"] = pose_warning
     mpath = os.path.join(args.out_dir, f"{args.name}.json")
     with open(mpath, "w", encoding="utf-8") as fh:
         json.dump(manifest, fh, ensure_ascii=False, indent=2)

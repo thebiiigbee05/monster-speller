@@ -102,6 +102,7 @@ node scripts/pipeline.mjs walker     # เฉพาะตัว (walker/runner/t
 | `--drop-flat` | off | กรองเฟรมหลอก 2 แบบ — แถบแบน/เงา (สูง < median×ratio) **และ** เส้นตั้ง/ขีดลอย (กว้าง < median×strip-ratio) |
 | `--flat-ratio` | 0.5 | เกณฑ์เฟรมแบน เทียบ median ความสูงเนื้อ (0.5 = สูงไม่ถึงครึ่งถือว่าแบน) |
 | `--strip-ratio` | 0.35 | เกณฑ์เส้นตั้ง/ขีดลอย เทียบ median ความกว้างเนื้อ (AI วาดขีดขาว/แสงแนวตั้งลอยข้างตัว สูงเท่าตัวจริง → ดูความสูงไม่ทัน ต้องดูความกว้าง) |
+| `--pose-names` | `contact,down,passing,up` | ชื่อท่าเรียงตามลำดับกริด (คั่น `,`) — เขียน `poseMap` ใน manifest + **เตือนถ้าเหลือท่าน้อยกว่าสัญญา** (ท่าที่ dedupe ทิ้งไป) |
 | `--dedupe` | off | ลบเฟรมซ้ำ (AI แปะท่าเดิมหลายรอบ) — เทียบ normalized ภาพ เก็บท่าที่ต่างกันจริง |
 | `--dup-threshold` | 3.0 | เกณฑ์ถือว่า 'ท่าเดียวกัน' (% ต่างของ normalized ภาพ, default 3.0) |
 | `--tol` | `28` | tolerance ลบพื้น (มาก = ลบแรงขึ้น) |
@@ -131,7 +132,8 @@ node scripts/pipeline.mjs walker     # เฉพาะตัว (walker/runner/t
 | GOOD 512×512 | **--require-check** | ✅ ผ่าน → ตัดเฟรม 16 + manifest · exit 0 |
 | BAD 512×512 | **--require-check** | ❌ ตรวจไม่ผ่าน → หยุด ไม่สร้างไฟล์ · exit 1 |
 | walker-sheet 1254px จริง (AI ไม่ตรงสัญญา) | **--drop-flat --dedupe** | 32 เฟรม → กรองเงา 16 → dedupe เหลือ 2 ท่าจริง · manifest 2 เฟรม · exit 0 |
-| walker-sheet v2 2508×627 (ขีดขาวลอย 2 เส้น) | **--drop-flat --dedupe** | 6 เฟรม (4 ตัว + 2 เส้นตั้งขาว 7×115) → strip กรอง 2 เส้น → เหลือ 4 ท่าจริง · exit 0 |
+| walker-sheet v2 2508×627 (ขีดขาวลอย 2 เส้น) | **--drop-flat --dedupe** | 6 เฟรม (4 ตัว + 2 เส้นตั้งขาว 7×115) → strip กรอง 2 เส้น → เหลือ 4 ท่าจริง · manifest มี poseMap ครบ 4 ท่า · exit 0 |
+| ท่าไม่ครบ (dedupe ทิ้งท่าซ้ำ) | เพิ่ม `--pose-names` 5 ชื่อแต่ได้ 4 เฟรม | ⚠️ เตือน `ท่าไม่ครบตามสัญญา… ขาด: …` + เขียน `poseWarning` ใน manifest · exit 0 (ใช้ต่อได้แต่ควร gen ใหม่) |
 | GOOD 512×512 (ท่าเดียวแปะ 4×4) | **--drop-flat --dedupe** | ไม่มีเฟรมแบน ✅ · dedupe ลบ 12 ตัวซ้ำ เหลือ 4 ท่าจริง · exit 0 |
 | AI sheet พื้นไล่เฉด 4 ตัว + เงา + ตัวมีรูกลาง | flood | ✅ 4 เฟรม · เงา 1078 px ลบ · รูกลางตัวไม่ถูกเจาะ |
 | sheet จริงของเกม (โปร่งใส 40 เฟรม) | flood `--dry` | ✅ 4×10 (ผ่าน sprite-frame-detect.py) |

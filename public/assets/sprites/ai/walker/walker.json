@@ -11,6 +11,18 @@
     "walker_02.png",
     "walker_03.png"
   ],
+  "poses": [
+    "contact",
+    "down",
+    "passing",
+    "up"
+  ],
+  "poseMap": {
+    "contact": "walker_00.png",
+    "down": "walker_01.png",
+    "passing": "walker_02.png",
+    "up": "walker_03.png"
+  },
   "animationFps": 8,
   "loop": true,
   "note": "สร้างโดย ai-sprite-process.py — ตรวจด้วยสายตาก่อนใช้"
