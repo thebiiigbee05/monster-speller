@@ -6,6 +6,7 @@
 ```
 design/art/
 ├── README.md                          ← ไฟล์นี้ (ภาพรวม + ขั้นตอน)
+├── silhouette-test.png                ← เงาดำล้วน 4 ชนิดเทียบ (ตรวจเอกลักษณ์)
 ├── turnaround-prompts.md              ← พรอมต์ AI เทิร์นอราวด์ 4 มุม (ทุกตัว)
 ├── sprite-spec.json                   ← ชั้น 3: timing/pivot/hitbox (เอ็นจินใช้)
 ├── character-bibles/                  ← ชั้น 1: คัมภีร์ตัวละคร (ใคร/เป็นยังไง/กฎ)
