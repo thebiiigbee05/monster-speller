@@ -1,11 +1,14 @@
-/* ธีม 2D Neon Sci-Fi (docs/06-chapter-6-ui-ux-graphics.md) */
+/* ธีม 2D Neon Sci-Fi (docs/06-chapter-6-ui-ux-graphics.md)
+   ฟอนต์: Chakra Petch (หัวข้อ/ตัวเลข) + Prompt (เนื้อหา) — โหลดจาก Google Fonts */
 :root {
-  --bg: #0b0f2a;
-  --panel: #141a3d;
+  --bg: #05070f;
+  --panel: rgba(18, 24, 58, 0.85);
+  --panel-solid: #121a3a;
   --neon-cyan: #00e5ff;
   --neon-pink: #ff2e97;
   --neon-green: #39ff14;
   --neon-red: #ff3b3b;
+  --gold: #ffd700;
   --text: #e6e9ff;
   --muted: #9aa0c8;
 }
@@ -14,8 +17,12 @@
 
 body {
   margin: 0;
-  font-family: 'Sarabun', 'Leelawadee UI', Tahoma, sans-serif;
-  background: var(--bg);
+  font-family: 'Prompt', 'Sarabun', 'Leelawadee UI', Tahoma, sans-serif;
+  font-weight: 400;
+  background:
+    radial-gradient(700px 340px at 85% 10%, rgba(168, 85, 247, 0.12), transparent 65%),
+    radial-gradient(800px 400px at 10% 90%, rgba(0, 229, 255, 0.1), transparent 65%),
+    var(--bg);
   color: var(--text);
   min-height: 100vh;
 }
@@ -30,165 +37,223 @@ body {
   padding: 16px;
 }
 
-.hub, .game { width: 100%; max-width: 860px; }
+.hub, .game { width: 100%; max-width: 880px; }
 
+/* ---- จอเปลี่ยนแบบ fade + เลื่อน ---- */
+.screen-enter-active, .screen-leave-active { transition: opacity 0.25s ease, transform 0.25s ease; }
+.screen-enter-from { opacity: 0; transform: translateY(14px); }
+.screen-leave-to { opacity: 0; transform: translateY(-10px); }
+
+/* ---- Hub ---- */
+.hub { text-align: center; padding: 24px 0; }
 .title {
   margin: 0;
-  font-size: clamp(2.2rem, 6vw, 3.6rem);
-  letter-spacing: 2px;
-  color: var(--neon-cyan);
-  text-shadow: 0 0 14px rgba(0, 229, 255, 0.55);
+  font-family: 'Chakra Petch', sans-serif;
+  font-weight: 700;
+  font-size: clamp(2.2rem, 6vw, 3.8rem);
+  letter-spacing: 3px;
+  background: linear-gradient(92deg, var(--neon-cyan), var(--neon-pink));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 16px rgba(0, 229, 255, 0.35));
 }
+.subtitle { color: var(--muted); font-size: 1.08rem; margin: 8px 0 32px; line-height: 1.7; }
 
-.subtitle { color: var(--muted); font-size: 1.1rem; margin: 4px 0 28px; }
-
-.menu { display: flex; flex-direction: column; gap: 12px; max-width: 320px; margin: 0 auto; }
+.menu { display: flex; flex-direction: column; gap: 14px; max-width: 340px; margin: 0 auto; }
 
 .btn {
   font: inherit;
   font-size: 1.05rem;
   cursor: pointer;
-  padding: 12px 18px;
-  border-radius: 10px;
-  border: 1px solid var(--neon-cyan);
-  background: transparent;
+  padding: 13px 20px;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 229, 255, 0.45);
+  background: var(--panel);
   color: var(--text);
-  transition: 0.15s;
+  transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
+  backdrop-filter: blur(6px);
 }
-.btn:hover { background: rgba(0, 229, 255, 0.12); }
-.btn-primary { background: var(--neon-pink); border-color: var(--neon-pink); color: #fff; font-weight: 700; }
-.btn-primary:hover { filter: brightness(1.1); }
-.btn-small { padding: 6px 12px; font-size: 0.9rem; }
+.btn:hover {
+  background: rgba(0, 229, 255, 0.12);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(0, 229, 255, 0.18);
+}
+.btn:active { transform: translateY(0); }
+.btn-primary {
+  background: linear-gradient(92deg, var(--neon-pink), #ff5cab);
+  border-color: transparent;
+  color: #fff;
+  font-weight: 700;
+  font-family: 'Chakra Petch', sans-serif;
+  letter-spacing: 1px;
+  box-shadow: 0 6px 24px rgba(255, 46, 151, 0.35);
+}
+.btn-primary:hover { filter: brightness(1.12); background: linear-gradient(92deg, var(--neon-pink), #ff5cab); }
+.btn-small { padding: 7px 13px; font-size: 0.88rem; }
 
+/* ---- HUD ---- */
 .hud {
   display: flex;
-  gap: 10px;
+  gap: 12px;
   align-items: center;
   flex-wrap: wrap;
-  padding: 10px 14px;
-  border-radius: 12px;
+  padding: 12px 16px;
+  border-radius: 14px;
   background: var(--panel);
-  border: 1px solid rgba(0, 229, 255, 0.25);
+  border: 1px solid rgba(0, 229, 255, 0.28);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 6px 26px rgba(0, 0, 0, 0.35);
 }
-.hud-item { font-size: 1rem; }
-.hud .selected { color: var(--neon-green); font-weight: 700; }
+.hud-item {
+  font-family: 'Chakra Petch', 'Prompt', sans-serif;
+  font-size: 1rem;
+  padding: 3px 10px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.25);
+}
+.hud .selected { color: var(--neon-green); font-weight: 700; border: 1px solid rgba(57, 255, 20, 0.4); }
 .hud .btn { margin-left: auto; }
 
-.arena-wrap { margin: 14px 0; position: relative; }
-
-/* ฉากยิงจริง (Canvas 960×540 ถูก scale ตามความกว้าง) */
+/* ---- ฉากเกม ---- */
+.arena-wrap { margin: 16px 0; position: relative; }
 .arena {
   display: block;
   width: 100%;
   aspect-ratio: 16 / 9;
-  border-radius: 12px;
-  border: 1px solid rgba(0, 229, 255, 0.25);
+  border-radius: 14px;
+  border: 1px solid rgba(0, 229, 255, 0.35);
   background: #0b0f2a;
   cursor: crosshair;
   touch-action: manipulation;
+  box-shadow: 0 0 34px rgba(0, 229, 255, 0.12), inset 0 0 60px rgba(0, 0, 0, 0.4);
 }
 .arena.dimmed { opacity: 0.6; pointer-events: none; }
 
 .hint-banner {
   position: absolute;
-  top: 10px;
+  top: 12px;
   left: 50%;
   transform: translateX(-50%);
   max-width: 92%;
-  padding: 8px 16px;
+  padding: 9px 18px;
   border-radius: 999px;
-  background: rgba(255, 62, 62, 0.92);
+  background: linear-gradient(92deg, rgba(255, 62, 62, 0.94), rgba(200, 30, 60, 0.94));
   color: #fff;
-  font-weight: 700;
+  font-weight: 600;
   font-size: 0.95rem;
   border: 1px solid rgba(255, 255, 255, 0.35);
-  box-shadow: 0 0 18px rgba(255, 59, 59, 0.6);
+  box-shadow: 0 0 22px rgba(255, 59, 59, 0.65);
   text-align: center;
   z-index: 5;
 }
 .fade-enter-active, .fade-leave-active { transition: opacity 0.2s; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
 
-.hud .combo { color: #ffd700; font-weight: 700; text-shadow: 0 0 8px rgba(255, 215, 0, 0.5); }
+.hud .combo { color: var(--gold); font-weight: 700; text-shadow: 0 0 10px rgba(255, 215, 0, 0.6); animation: combo-pulse 0.6s ease; }
+@keyframes combo-pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
 
-/* สรุปรอบ (docs/04-chapter-4-game-design.md ข้อ 4.8) */
-.summary-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(5, 8, 26, 0.88);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 60;
-  padding: 16px;
-}
-.summary-card {
-  background: var(--panel);
-  border: 1px solid var(--neon-cyan);
-  border-radius: 16px;
-  padding: 26px 30px;
-  min-width: 320px;
-  max-width: 480px;
-  width: 100%;
-  text-align: center;
-  box-shadow: 0 0 40px rgba(0, 229, 255, 0.25);
-}
-.summary-card h2 { margin: 0 0 6px; color: var(--neon-cyan); }
-.summary-score { font-size: 1.15rem; margin: 4px 0 16px; color: var(--muted); }
-.summary-score strong { color: #ffd700; font-size: 1.8rem; margin-left: 6px; }
-.summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 14px; }
-.stat {
-  background: rgba(0, 229, 255, 0.08);
-  border-radius: 10px;
-  padding: 10px 4px;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-.stat-num { font-size: 1.3rem; font-weight: 800; color: var(--neon-cyan); }
-.stat-label { font-size: 0.78rem; color: var(--muted); }
-.verdict { margin: 4px 0 16px; font-size: 1rem; }
-.summary-actions { display: flex; gap: 10px; justify-content: center; }
-
+/* ---- กระสุน 8 มาตรา (สีประจำมาตรา) ---- */
+.bullets { display: grid; grid-template-columns: repeat(8, 1fr); gap: 9px; margin-bottom: 12px; }
 .bullet {
   font: inherit;
   cursor: pointer;
   padding: 10px 4px;
-  border-radius: 10px;
-  border: 1px solid rgba(0, 229, 255, 0.4);
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--mc, #00e5ff) 55%, transparent);
   background: var(--panel);
   color: var(--text);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
+  gap: 3px;
+  transition: transform 0.12s, box-shadow 0.12s, background 0.12s;
 }
-.bullet .key { font-size: 0.72rem; color: var(--muted); }
+.bullet:hover { transform: translateY(-3px); box-shadow: 0 6px 16px color-mix(in srgb, var(--mc, #00e5ff) 30%, transparent); }
+.bullet .key { font-size: 0.72rem; color: var(--muted); font-family: 'Chakra Petch', sans-serif; }
+.bullet .matra { font-family: 'Chakra Petch', sans-serif; font-weight: 600; font-size: 1.05rem; }
 .bullet.active {
-  border-color: var(--neon-green);
-  color: var(--neon-green);
-  box-shadow: 0 0 10px rgba(57, 255, 20, 0.4);
+  border-color: var(--mc, #00e5ff);
+  color: var(--mc, #00e5ff);
+  background: color-mix(in srgb, var(--mc, #00e5ff) 14%, var(--panel));
+  box-shadow: 0 0 14px color-mix(in srgb, var(--mc, #00e5ff) 45%, transparent);
+  transform: translateY(-2px);
 }
 
+/* ---- สรุปรอบ ---- */
+.summary-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 8, 26, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 60;
+  padding: 16px;
+  animation: fade-in 0.25s ease;
+}
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+.summary-card {
+  background: var(--panel-solid);
+  border: 1px solid rgba(0, 229, 255, 0.5);
+  border-radius: 18px;
+  padding: 28px 32px;
+  min-width: 320px;
+  max-width: 500px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 0 50px rgba(0, 229, 255, 0.22);
+  animation: pop-in 0.3s cubic-bezier(0.2, 1.4, 0.4, 1);
+}
+@keyframes pop-in { from { transform: scale(0.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.summary-card h2 { margin: 0 0 6px; color: var(--neon-cyan); font-family: 'Chakra Petch', sans-serif; letter-spacing: 1px; }
+.summary-score { font-size: 1.15rem; margin: 4px 0 18px; color: var(--muted); }
+.summary-score strong { color: var(--gold); font-size: 2.2rem; margin-left: 8px; font-family: 'Chakra Petch', sans-serif; }
+.summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 16px; }
+.stat {
+  background: rgba(0, 229, 255, 0.08);
+  border: 1px solid rgba(0, 229, 255, 0.15);
+  border-radius: 12px;
+  padding: 12px 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.stat-num { font-size: 1.4rem; font-weight: 700; color: var(--neon-cyan); font-family: 'Chakra Petch', sans-serif; }
+.stat-label { font-size: 0.78rem; color: var(--muted); }
+.verdict { margin: 4px 0 18px; font-size: 1rem; }
+.summary-actions { display: flex; gap: 12px; justify-content: center; }
+
+/* ---- Modal ---- */
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.65);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 50;
+  padding: 16px;
+  animation: fade-in 0.2s ease;
 }
 .modal {
-  background: var(--panel);
-  border: 1px solid rgba(0, 229, 255, 0.35);
-  border-radius: 14px;
-  padding: 22px;
+  background: var(--panel-solid);
+  border: 1px solid rgba(0, 229, 255, 0.4);
+  border-radius: 16px;
+  padding: 24px;
   min-width: 320px;
-  max-width: 460px;
+  max-width: 470px;
+  box-shadow: 0 16px 50px rgba(0, 0, 0, 0.5);
+  animation: pop-in 0.25s cubic-bezier(0.2, 1.4, 0.4, 1);
 }
-.modal h2 { margin-top: 0; color: var(--neon-cyan); }
-.row { display: flex; align-items: center; gap: 10px; margin: 10px 0; }
+.modal h2 { margin-top: 0; color: var(--neon-cyan); font-family: 'Chakra Petch', sans-serif; letter-spacing: 1px; }
+.row { display: flex; align-items: center; gap: 12px; margin: 12px 0; }
 
 table.hof { width: 100%; border-collapse: collapse; }
-table.hof th, table.hof td { border-bottom: 1px solid rgba(255, 255, 255, 0.12); padding: 6px 8px; text-align: left; }
+table.hof th, table.hof td { border-bottom: 1px solid rgba(255, 255, 255, 0.12); padding: 8px 10px; text-align: left; }
+table.hof th { color: var(--muted); font-weight: 500; font-size: 0.85rem; }
+table.hof td:first-child { font-family: 'Chakra Petch', sans-serif; color: var(--neon-cyan); }

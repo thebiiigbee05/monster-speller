@@ -8,7 +8,9 @@ const game = useGameStore();
 
 <template>
   <main class="app">
-    <HubScreen v-if="game.status === 'hub'" />
-    <GameScreen v-else />
+    <Transition name="screen" mode="out-in">
+      <HubScreen v-if="game.status === 'hub'" key="hub" />
+      <GameScreen v-else key="game" />
+    </Transition>
   </main>
 </template>

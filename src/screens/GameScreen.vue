@@ -3,6 +3,7 @@ import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useGameStore } from '../stores/game';
 import { useSettingsStore, type Speed } from '../stores/settings';
 import { MATRA_ORDER } from '../data/types';
+import { MATRA_COLORS } from '../game/constants';
 import { GameEngine } from '../game/GameEngine';
 
 const game = useGameStore();
@@ -134,9 +135,11 @@ watch(
         :data-testid="'bullet-' + m"
         class="bullet"
         :class="{ active: game.selectedMatra === m }"
+        :style="{ '--mc': MATRA_COLORS[m] }"
         @click="selectBullet(m)"
       >
-        <span class="key">{{ i + 1 }}</span>{{ m }}
+        <span class="key">{{ i + 1 }}</span>
+        <span class="matra">{{ m }}</span>
       </button>
     </footer>
 
