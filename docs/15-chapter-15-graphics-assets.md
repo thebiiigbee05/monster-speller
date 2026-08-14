@@ -99,6 +99,9 @@ NO margin. Grid lines at exact multiples of 64 px, pure background color.
 NO shadow, NO text, NO letters, NO watermark, NO glow outside the orb.
 ```
 > **คำสั่ง:** `ai-sprite-process.py <bullets.png> --name bullet --cell 64 --out-dir assets/ui/bullets/ --grid-bg "#00ff00" --expect-grid 4x2 --require-check`
+>
+> **📦 ไฟล์:** AI สร้าง → ตั้งชื่อ **`bullets-sheet.png`** วางที่ **`public/assets/ai/`**
+> · ผลลัพธ์: เฟรม `bullet_00.png…07.png` + `bullet.json` ใน **`public/assets/ui/bullets/`**
 
 ### 15.4.2 ชิ้นส่วนอัปเกรดยาน (4 ชิ้น — Sprint 4)
 
@@ -132,6 +135,9 @@ BACKGROUND: flat solid pure green #00ff00 ONLY. NO shadow, NO glow outside
 the part, NO text, NO watermark.
 ```
 > **คำสั่ง:** `ai-sprite-process.py <parts.png> --name part --cell 64 --out-dir assets/items/parts/ --grid-bg "#00ff00" --expect-grid 2x2 --require-check`
+>
+> **📦 ไฟล์:** AI สร้าง → ตั้งชื่อ **`ship-parts-sheet.png`** วางที่ **`public/assets/ai/`**
+> · ผลลัพธ์: เฟรม `part_00.png…03.png` + `part.json` ใน **`public/assets/items/parts/`**
 
 ### 15.4.3 ไอเท็มเสริมพลัง (Power-ups — เสนอเพิ่ม)
 
@@ -165,6 +171,9 @@ BACKGROUND: flat solid pure green #00ff00 ONLY. NO shadow, NO glow outside
 the icon, NO text, NO watermark.
 ```
 > **คำสั่ง:** `ai-sprite-process.py <powerups.png> --name powerup --cell 64 --out-dir assets/items/powerups/ --grid-bg "#00ff00" --expect-grid 2x2 --require-check`
+>
+> **📦 ไฟล์:** AI สร้าง → ตั้งชื่อ **`powerups-sheet.png`** วางที่ **`public/assets/ai/`**
+> · ผลลัพธ์: เฟรม `powerup_00.png…03.png` + `powerup.json` ใน **`public/assets/items/powerups/`**
 
 ### 15.4.4 เอฟเฟกต์และวัตถุประกอบฉาก
 
@@ -178,6 +187,9 @@ the icon, NO text, NO watermark.
 >
 > **คำสั่ง (รวมเอฟเฟกต์เป็นชุด — กริดตามจำนวนไอเท็ม เช่น 5 ในแถวเดียว):**
 > `ai-sprite-process.py <fx.png> --name fx --cell 32 --out-dir assets/ui/fx/ --grid-bg "#00ff00" --expect-grid 1x5 --require-check`
+>
+> **📦 ไฟล์:** AI สร้าง → ตั้งชื่อ **`fx-sheet.png`** วางที่ **`public/assets/ai/`**
+> · ผลลัพธ์: เฟรม `fx_00.png…` + `fx.json` ใน **`public/assets/ui/fx/`**
 
 ---
 
@@ -213,6 +225,11 @@ the item, NO text, NO letters, NO watermark.
     --grid-bg "#00ff00" --expect-grid <COLS>x<ROWS> --require-check
 ```
 
+> **📦 ไฟล์ (กฎการตั้งชื่อ):** ไฟล์ที่ AI สร้าง ตั้งชื่อ **`<name>-sheet.png`**
+> วางที่ **`public/assets/ai/`** เสมอ · ผลลัพธ์ (เฟรม + manifest) ไปที่
+> **`public/assets/<ที่เก็บ>/`** ตาม `--out-dir` — อย่าใส่ไฟล์ AI ดิบลง
+> `public/assets/` โดยตรง (ต้องผ่านสคริปต์ก่อน)
+
 **Checklist ตรวจผล (ทุกชุด):**
 
 - [ ] จำนวนชิ้นครบตามกริด (ตรวจด้วย `--check` → `--expect-grid` ตรงกัน)
@@ -236,6 +253,8 @@ the item, NO text, NO letters, NO watermark.
 
 ## 15.5 พรอมต์: พื้นหลังฉากเกม (มีแล้ว — อ้างอิง)
 
+> **📦 ไฟล์:** ตั้งชื่อ **`space-bg.png`** วางที่ **`public/assets/bg/`** (ใช้เต็มจอ ไม่ต้องผ่านสคริปต์)
+
 ```text
 2D game background for a children's educational space shooter "Monster Speller".
 FLAT 2D side-view space scene, NEON SCI-FI style.
@@ -250,7 +269,9 @@ no text, no logo, no watermark. 16:9, 960x540.
 
 ---
 
-## 15.6 พรอมต์: พื้นหลัง Hub (1920×1080)
+## 15.6 พร้อมต์: พื้นหลัง Hub (1920×1080)
+
+> **📦 ไฟล์:** ตั้งชื่อ **`hub-bg.png`** วางที่ **`public/assets/bg/`** (ใช้เต็มจอ ไม่ต้องผ่านสคริปต์)
 
 ```text
 Wide 2D game background for the MAIN MENU of "Monster Speller".
@@ -269,7 +290,8 @@ No characters, no text, no logo, no watermark. 16:9, 1920x1080.
 
 ## 15.7 พรอมต์: พื้นหลังด่านพิเศษ 3 แบบ (960×540)
 
-**A. เขตกาแล็กซีวิกฤต (ด่าน 4–6) → `crisis-galaxy-bg.png`:**
+**A. เขตกาแล็กซีวิกฤต (ด่าน 4–6):**
+> **📦 ไฟล์:** ตั้งชื่อ **`crisis-galaxy-bg.png`** วางที่ **`public/assets/bg/`**
 ```text
 2D game background for levels 4-6 of "Monster Speller". DANGEROUS CRISIS
 SECTOR: swirling red-pink nebulas, floating purple asteroid chunks, a jagged
@@ -281,7 +303,8 @@ cyan #00e5ff (horizon). Kid-friendly cartoon danger. No characters/monsters/
 ship/text/logo/watermark. 16:9, 960x540.
 ```
 
-**B. ป้อมจอมมาร (ด่าน 7–8) → `demon-fortress-bg.png`:**
+**B. ป้อมจอมมาร (ด่าน 7–8):**
+> **📦 ไฟล์:** ตั้งชื่อ **`demon-fortress-bg.png`** วางที่ **`public/assets/bg/`**
 ```text
 2D game background for FINAL BOSS levels 7-8 of "Monster Speller". THE DEMON
 FORTRESS: red-black space with a HUGE red sun + solar flares (upper-left),
@@ -293,7 +316,8 @@ cyan #00e5ff. Dramatic but kid-friendly cartoon villain lair. No characters/
 monsters/ship/text/logo/watermark. 16:9, 960x540.
 ```
 
-**C. สวรรค์สีทอง (ฉากชนะ/โบนัส) → `golden-heaven-bg.png`:**
+**C. สวรรค์สีทอง (ฉากชนะ/โบนัส):**
+> **📦 ไฟล์:** ตั้งชื่อ **`golden-heaven-bg.png`** วางที่ **`public/assets/bg/`**
 ```text
 2D game background for a VICTORY/bonus scene of "Monster Speller". GOLDEN
 CELESTIAL SANCTUARY: warm gold-pink nebulas, small radiant white-gold sun
@@ -325,6 +349,9 @@ NO glow, NO text, NO logo, NO watermark. Character must NOT touch cell
 borders (min 8px clearance).
 ```
 > **คำสั่ง:** `ai-sprite-process.py <monster-sheet.png> --name monster --cell 128 --out-dir out/ --grid-bg "#00ff00" --expect-grid 1x6 --require-check`
+>
+> **📦 ไฟล์:** AI สร้าง → ตั้งชื่อ **`monster-<ชื่อ>-sheet.png`** วางที่ **`public/assets/ai/`**
+> · ผลลัพธ์: เฟรม + `<ชื่อ>.json` ใน **`public/assets/sprites/ai/<ชื่อ>/`**
 
 > ⚠️ **ข้อควรระวัง:** สไปรต์จาก AI มักได้เฟรมไม่ตรงตำแหน่ง/ไม่ loop สมูท
 > → ใช้เป็นแนวอ้างอิงแล้ววาดทับด้วย `scripts/generate-sprites.mjs` หรือ
@@ -335,6 +362,7 @@ borders (min 8px clearance).
 ## 15.9 พรอมต์: ฉากและตัวละครเสริม (Sprint 4–5)
 
 **Hangar (โรงเก็บยาน):**
+> **📦 ไฟล์:** ตั้งชื่อ **`hangar-bg.png`** วางที่ **`public/assets/bg/`** (ใช้เต็มจอ)
 ```text
 2D game background for the HANGAR/upgrade screen of "Monster Speller".
 A neon repair dock: spaceship service bay with glowing platforms, floating
@@ -353,6 +381,9 @@ outline, kid-friendly. Square 256x256. LAYOUT: single character centered,
 NO shadow, NO text, NO logo, NO watermark. Character must NOT touch edges.
 ```
 > **คำสั่ง:** `ai-sprite-process.py <commander.png> --name commander --cell 256 --out-dir assets/characters/ --grid-bg "#00ff00" --expect-grid 1x1 --require-check`
+>
+> **📦 ไฟล์:** AI สร้าง → ตั้งชื่อ **`commander-sheet.png`** วางที่ **`public/assets/ai/`**
+> · ผลลัพธ์: `commander_00.png` + `commander.json` ใน **`public/assets/characters/`**
 
 **หุ่นยนต์ RO-BOT (ผู้ช่วยสอน) — PEP:**
 ```text
@@ -364,6 +395,9 @@ TOTAL 256x256 px. BACKGROUND: flat solid pure green #00ff00 ONLY. NO shadow,
 NO text, NO logo, NO watermark. Character must NOT touch edges.
 ```
 > **คำสั่ง:** `ai-sprite-process.py <robot.png> --name robot --cell 256 --out-dir assets/characters/ --grid-bg "#00ff00" --expect-grid 1x1 --require-check`
+>
+> **📦 ไฟล์:** AI สร้าง → ตั้งชื่อ **`robot-sheet.png`** วางที่ **`public/assets/ai/`**
+> · ผลลัพธ์: `robot_00.png` + `robot.json` ใน **`public/assets/characters/`**
 
 ---
 

@@ -4,6 +4,11 @@
 > อ้างอิงข้อมูลจาก `character-bibles/*.md` — ห้ามขัดแย้งกับ Bible
 > **วิธีใช้:** คัดลอกพรอมต์ → วางใน AI → นำผลกลับมา **รัน `--check` ก่อนใช้**
 >
+> **📦 ไฟล์:** ไฟล์ที่ AI สร้าง ตั้งชื่อ **`<name>-turnaround-sheet.png`** (เช่น
+> `walker-turnaround-sheet.png`) วางที่ **`public/assets/ai/`** → รันคำสั่งท้ายแต่ละข้อ
+> · ผลลัพธ์: เฟรม `<name>-turnaround_00.png…03.png` + `<name>-turnaround.json`
+> ใน **`public/assets/sprites/ai/<name>-turnaround/`**
+>
 > ⚠️ **เวอร์ชัน PEP** — เปลี่ยนจาก "transparent background" (AI ทำไม่ได้จริง
 > ได้พื้นขาว/เทามา → สคริปต์ต้องเดา) เป็น **พื้น `#00ff00` ล้วน + กริด 2×2**
 > (ตามสเปก `design/prompt-processability-spec.md`) → ประมวลผลได้ 100% แน่นอน
