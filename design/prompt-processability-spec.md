@@ -110,6 +110,12 @@ NO extra characters, NO UI elements, NO background decoration.
 **ขั้นแรก (เร็วสุด):** รันโหมดตรวจภาพอัตโนมัติ
 
 ```bash
+# 1 บรรทัดจบ: ตรวจก่อน (--require-check) → ผ่านจึงตัดเฟรม + manifest
+./.venv-scripts/Scripts/python.exe scripts/ai-sprite-process.py <sheet.png> \
+    --name walker --cell 64 --out-dir out/ \
+    --grid-bg "#00ff00" --expect-grid 4x4 --require-check
+
+# หรือตรวจอย่างเดียว (ไม่สร้างไฟล์)
 ./.venv-scripts/Scripts/python.exe scripts/ai-sprite-process.py <sheet.png> \
     --check --grid-bg "#00ff00" --expect-grid 4x4
 ```
@@ -136,7 +142,8 @@ NO extra characters, NO UI elements, NO background decoration.
                                         │
                                ผ่าน?  ──┤ ไม่ผ่าน → gen ใหม่ / i2i
                                         ▼
-                          ai-sprite-process.py --grid-bg #00ff00
+                ai-sprite-process.py --grid-bg #00ff00 --require-check
+                (ตรวจอัตโนมัติก่อน — ไม่ผ่าน หยุด ไม่สร้างไฟล์)
                                         │
                     (1) ตรวจกริดตรง  (2) ลบ bg (ลบง่าย: สีเดียว)
                     (3) ตัดเฟรมตามกริด  (4) normalize + manifest

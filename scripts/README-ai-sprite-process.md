@@ -18,6 +18,12 @@
 ตรวจ sheet ว่าตรงสัญญา PEP ไหม **โดยไม่สร้างไฟล์** — ใช้กับภาพ AI ที่เพิ่งได้มา
 
 ```bash
+# ตรวจก่อน → ผ่านจึงตัดเฟรม (1 บรรทัดจบ):
+./.venv-scripts/Scripts/python.exe scripts/ai-sprite-process.py <sheet.png> \
+    --name walker --cell 64 --out-dir out/ \
+    --grid-bg "#00ff00" --expect-grid 4x4 --require-check
+
+# ตรวจอย่างเดียว:
 ./.venv-scripts/Scripts/python.exe scripts/ai-sprite-process.py <sheet.png> \
     --check --grid-bg "#00ff00" --expect-grid 4x4
 ```
@@ -66,6 +72,7 @@
 | `--grid-bg` | — | พื้นสีเดียวตามสัญญา PEP เช่น `#00ff00` → key ลบพื้น |
 | `--expect-grid` | — | กริดที่คาด เช่น `4x4` → ตรวจเฟรมตรงสัญญาไหม (จับเฟรมหลอก/หาย) |
 | `--check` | off | โหมดตรวจภาพอย่างเดียว (ไม่ตัดเฟรม): รายงานเฟรมหลอก/เงา/กริด/ติดขอบ + exit code |
+| `--require-check` | off | ตรวจก่อนตัดเฟรม: มี error → หยุด (exit 1 ไม่สร้างไฟล์) · ผ่าน/เตือน → ตัดเฟรม + manifest ต่อ |
 | `--tol` | `28` | tolerance ลบพื้น (มาก = ลบแรงขึ้น) |
 | `--remove-shadows` | off | ลบเงาใต้ตัว (แถวล่างที่ไร้สีสัน + เข้มกว่าพื้น) |
 | `--threshold` | `0.15` | เกณฑ์ "เนื้อ" ตรวจจับเฟรม |
@@ -90,6 +97,8 @@
 | sheet ละเมิดสัญญา (เซลล์ว่าง + เงา + ตัวใหญ่) | **--check** | ❌ 1 (เฟรมว่าง) + ⚠️ 2 (ติดขอบ + เงา) · exit 1 |
 | sheet ทดสอบ 512×512 ตามพรอมต์ PEP ใหม่ (กรอบตรงพิทช์ 128) | **--check** | ✅ 4/4 · exit 0 (สร้างด้วย `tests/make-pep512-sheet-test.py`) |
 | sheet ละเมิด 512×512 (ว่าง + เงา + ตัวใหญ่) | **--check** | ❌ 1 + ⚠️ 2 · exit 1 — แยกถูก/ผิดครบทุกข้อ |
+| GOOD 512×512 | **--require-check** | ✅ ผ่าน → ตัดเฟรม 16 + manifest · exit 0 |
+| BAD 512×512 | **--require-check** | ❌ ตรวจไม่ผ่าน → หยุด ไม่สร้างไฟล์ · exit 1 |
 | AI sheet พื้นไล่เฉด 4 ตัว + เงา + ตัวมีรูกลาง | flood | ✅ 4 เฟรม · เงา 1078 px ลบ · รูกลางตัวไม่ถูกเจาะ |
 | sheet จริงของเกม (โปร่งใส 40 เฟรม) | flood `--dry` | ✅ 4×10 (ผ่าน sprite-frame-detect.py) |
 

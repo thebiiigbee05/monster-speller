@@ -51,7 +51,7 @@ NO extra characters, NO UI elements, NO background decoration.
 cd monster-speller-src
 ./.venv-scripts/Scripts/python.exe scripts/ai-sprite-process.py <walker-sheet.png> \
     --name walker --cell 128 --out-dir public/assets/sprites/ai/walker \
-    --grid-bg "#00ff00" --expect-grid 4x4
+    --grid-bg "#00ff00" --expect-grid 4x4 --require-check
 ```
 
 ---
@@ -99,7 +99,7 @@ NO extra characters, NO UI elements, NO background decoration.
 ```bash
 ./.venv-scripts/Scripts/python.exe scripts/ai-sprite-process.py <runner-sheet.png> \
     --name runner --cell 128 --out-dir public/assets/sprites/ai/runner \
-    --grid-bg "#00ff00" --expect-grid 4x4
+    --grid-bg "#00ff00" --expect-grid 4x4 --require-check
 ```
 
 ---
@@ -148,7 +148,7 @@ NO extra characters, NO UI elements, NO background decoration.
 ```bash
 ./.venv-scripts/Scripts/python.exe scripts/ai-sprite-process.py <tank-sheet.png> \
     --name tank --cell 128 --out-dir public/assets/sprites/ai/tank \
-    --grid-bg "#00ff00" --expect-grid 4x4
+    --grid-bg "#00ff00" --expect-grid 4x4 --require-check
 ```
 
 ---
@@ -197,7 +197,7 @@ NO extra characters, NO UI elements, NO background decoration.
 ```bash
 ./.venv-scripts/Scripts/python.exe scripts/ai-sprite-process.py <boss-sheet.png> \
     --name boss --cell 128 --out-dir public/assets/sprites/ai/boss \
-    --grid-bg "#00ff00" --expect-grid 4x4
+    --grid-bg "#00ff00" --expect-grid 4x4 --require-check
 ```
 
 ---
@@ -217,7 +217,7 @@ NO extra characters, NO UI elements, NO background decoration.
 
 ## 🧪 Checklist ตรวจภาพก่อนเอาไปใช้ (ทุกตัวเหมือนกัน)
 
-1. [ ] **รัน `--check`** (คำสั่งท้ายแต่ละข้อ + ต่อท้าย `--check`) → exit `0` (ไม่มี ❌)
+1. [ ] **รันคำสั่งท้ายข้อ** (มี `--require-check` อยู่แล้ว: ตรวจก่อน → ผ่านจึงตัดเฟรม) → exit `0` = ผ่าน + ได้เฟรม/manifest · exit `1` = ตรวจไม่ผ่าน → gen ใหม่
 2. [ ] เปิดภาพ → พื้นเขียว `#00ff00` ล้วน (ไม่มีไล่เฉด/เกรน) + ขนาด 512×512 พอดี
 3. [ ] เส้นกริดที่ x/y = 128, 256, 384 ตรงเป็นเส้น bg ล้วน (กรอบตรงพิทช์)
 4. [ ] ตัวละครไม่ติดขอบเซลล์ (มีช่องว่างรอบตัว ≥ 8px)

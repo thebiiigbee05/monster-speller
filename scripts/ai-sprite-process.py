@@ -589,6 +589,8 @@ def main():
                     help="กริดที่คาดจากพรอมต์ เช่น 4x4 — ตรวจว่าเฟรมตรงสัญญาไหม")
     ap.add_argument("--check", action="store_true",
                     help="โหมดตรวจภาพอย่างเดียว: รายงานเฟรมหลอก/เงา/กริด/ติดขอบ — ไม่สร้างไฟล์")
+    ap.add_argument("--require-check", action="store_true",
+                    help="รัน --check ก่อนตัดเฟรม: ถ้ามี error หยุด (exit 1 ไม่สร้างไฟล์) ถ้าผ่าน/เตือน → ตัดเฟรม + manifest ต่อ")
     args = ap.parse_args()
 
     img = Image.open(args.sheet)
@@ -608,6 +610,20 @@ def main():
                                       expected_grid=args.expect_grid)
         return 1 if summary["error"] else 0
 
+    # โหมด --require-check: ตรวจภาพก่อนตัดเฟรม (ผ่าน/เตือน → ต่อ, error → หยุด)
+    if args.require_check:
+        if not args.grid_bg:
+            print("--require-check ต้องระบุ --grid-bg (สีพื้นตามสัญญา PEP เช่น #00ff00)")
+            return 2
+        hexv = args.grid_bg.lstrip("#")
+        gbg = tuple(int(hexv[i:i + 2], 16) for i in (0, 2, 4))
+        issues, summary = check_sheet(img, gbg, expect=args.expect_grid,
+                                      tol=args.tol,
+                                      expected_grid=args.expect_grid)
+        if summary["error"]:
+            print("\n⛔ ตรวจไม่ผ่าน — หยุด ไม่สร้างเฟรม/manifest ไป gen ใหม่")
+            return 1
+        print("\n▶ ตรวจผ่าน — ตัดเฟรม + manifest ต่อ")
     # โหมดกริดบังคับ (PEP): พื้นสีเดียว → ลบพื้น (key) ก่อน แล้วตรวจจับเซลล์
     # จากช่องว่างเนื้อ (วิธีเดียวกับ flood-fill mode) + ตรวจกริดว่าตรงสัญญาไหม
     if args.grid_bg:
@@ -698,3 +714,5 @@ def main():
 
 if __name__ == "__main__":
     sys.exit(main())
+
+
