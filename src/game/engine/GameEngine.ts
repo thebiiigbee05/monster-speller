@@ -11,6 +11,7 @@ import { WaveManager } from './WaveManager';
 import { ParticleSystem, FloatingTexts } from '../render/Effects';
 import { SpriteRenderer } from '../render/SpriteRenderer';
 import { buildHint } from '../systems/Hints';
+import { buildChoices } from '../systems/Options';
 import { effectiveSpeed } from '../systems/Difficulty';
 import { pickWord } from '../../content/words/wordBank';
 import { getLevel, type LevelConfig } from '../../content/levels';
@@ -45,7 +46,19 @@ export interface EngineEvents {
   onWrong(): void;
   onHint(text: string): void;
   onEscape(): void;
+  /** โหมดเรียนรู้: เปลี่ยนชุดตัวเลือก 3 มาตรา */
+  onChoices?(options: Matra[], correctIndex: number): void;
+  /** โหมดเรียนรู้: ตอบครบทุกคำ */
+  onLearnDone?(): void;
 }
+
+export type GameMode = 'challenge' | 'learn';
+
+/** จำนวนคำต่อรอบโหมดเรียนรู้ (docs/04-chapter-4 ข้อ 4.6) */
+export const LEARN_WORDS_PER_ROUND = 8;
+
+/** ตำแหน่งที่มอนสเตอร์เดินมาหยุดรอในโหมดเรียนรู้ (กลางจอ) */
+export const LEARN_STOP_X = 500;
 
 export class GameEngine {
   readonly width = CANVAS_W;
@@ -66,6 +79,13 @@ export class GameEngine {
   private gentleMode = false;
   private level: LevelConfig = getLevel(1);
   private pointer = { x: SHIP.x, y: SHIP.y - 120 };
+
+  // ------------------------------------------------------- โหมดเรียนรู้
+  private mode: GameMode = 'challenge';
+  private learnQueue: WordEntry[] = [];
+  private learnIndex = 0;
+  private choices: Matra[] = [];
+  private disabledChoices = new Set<Matra>();
 
   private wave: WaveManager;
   private particles = new ParticleSystem();
@@ -132,6 +152,47 @@ export class GameEngine {
     this.gentleMode = on;
   }
 
+  /** เปลี่ยนโหมดเกม (challenge = ยิง, learn = เลือกคำตอบ) */
+  setMode(mode: GameMode): void {
+    this.mode = mode;
+    if (mode === 'learn') this.initLearnRound();
+  }
+
+  /** ตัวเลือกมาตรา 3 ตัวของคำปัจจุบัน (สำหรับ UI ปุ่ม) */
+  currentChoices(): readonly Matra[] {
+    return this.choices;
+  }
+
+  /** ตอบคำในโหมดเรียนรู้ — ถูก = เลเซอร์แปลงมอนสเตอร์, ผิด = คำใบ้ + ปิดตัวเลือก */
+  answer(matra: Matra): boolean {
+    if (this.mode !== 'learn') return false;
+    const m = this.monsters[0];
+    if (!m || m.state === 'exploding' || m.state === 'friendly') return false;
+    if (this.disabledChoices.has(matra)) return false;
+
+    if (matra === m.word.matra) {
+      this.disabledChoices.clear();
+      // เลเซอร์ยิงอัตโนมัติ (ถูก) → ระเบิด → เป็นมิตร
+      m.hit(matra);
+      this.combo += 1;
+      this.particles.burst(m.x, m.y, '#39ff14', 30, 300, 3.5, 0.8);
+      this.particles.burst(m.x, m.y, MATRA_COLORS[m.word.matra], 18, 200, 3, 0.6);
+      this.texts.add(`+${m.points}`, m.x, m.y - 34, '#ffd700', 24);
+      this.shake = Math.min(this.shake + 0.4, 1);
+      this.events.onCorrect(m.points, this.combo);
+      this.events.onHint('');
+      return true;
+    }
+
+    // ผิด — คำใบ้ + ปิดตัวเลือกนั้น (ไม่มีการลงโทษ/ไม่เสีย HP)
+    this.disabledChoices.add(matra);
+    m.hintLevel = Math.min(3, m.hintLevel + 1);
+    this.combo = 0;
+    this.events.onWrong();
+    this.events.onHint(buildHint(m, this.gentleMode));
+    return false;
+  }
+
   /** คลิก/แตะบน canvas — ยิงไปยังจุดนั้น */
   handlePointer(clientX: number, clientY: number): void {
     const rect = this.canvasRect();
@@ -160,6 +221,42 @@ export class GameEngine {
 
   // ---------------------------------------------------------------- update
 
+  /** เตรียมคิวคำ 8 คำ (ตรง/ไม่ตรงมาตรา ตามด่าน) + มอนสเตอร์ตัวแรก */
+  private initLearnRound(): void {
+    this.monsters = [];
+    this.bullets = [];
+    this.learnQueue = [];
+    const used = new Set<string>();
+    for (let i = 0; i < LEARN_WORDS_PER_ROUND; i++) {
+      const w = pickWord(used, this.level.irregularRatio);
+      used.add(w.word);
+      this.learnQueue.push(w);
+    }
+    this.learnIndex = 0;
+    this.spawnLearnMonster();
+  }
+
+  /** สร้างมอนสเตอร์คำถัดไป + ชุดตัวเลือก 3 มาตรา */
+  private spawnLearnMonster(): void {
+    const word = this.learnQueue[this.learnIndex];
+    const m = new WalkerMonster(word, this.width + 40, this.height / 2 - 10);
+    this.monsters = [m];
+    this.disabledChoices = new Set();
+    const { options, correctIndex } = buildChoices(word.matra, 3);
+    this.choices = options;
+    this.events.onChoices?.(options, correctIndex);
+  }
+
+  /** คำถัดไป หรือจบรอบเรียนรู้ */
+  private nextLearnWord(): void {
+    this.learnIndex += 1;
+    if (this.learnIndex >= this.learnQueue.length) {
+      this.events.onLearnDone?.();
+      return;
+    }
+    this.spawnLearnMonster();
+  }
+
   private update(dt: number): void {
     this.elapsed += dt;
 
@@ -169,6 +266,23 @@ export class GameEngine {
     this.texts.update(dt);
     this.shake = Math.max(0, this.shake - dt * 2.2);
     this.muzzleFlash = Math.max(0, this.muzzleFlash - dt * 9);
+
+    // โหมดเรียนรู้: มอนสเตอร์เดินมาหยุดกลางจอ → รอคำตอบ → เป็นมิตรจบ → คำถัดไป
+    if (this.mode === 'learn') {
+      const m = this.monsters[0];
+      if (m) {
+        m.update(dt, 1);
+        if (m.state === 'walking' && m.x <= LEARN_STOP_X) {
+          m.state = 'idle';
+          m.stateTimer = 0;
+        }
+        if (m.state === 'escaped') {
+          this.monsters = [];
+          this.nextLearnWord();
+        }
+      }
+      return;
+    }
 
     // คลื่นมอนสเตอร์ (WaveManager — คาบตามด่านและเวลาในรอบ)
     this.spawnTimer -= dt;

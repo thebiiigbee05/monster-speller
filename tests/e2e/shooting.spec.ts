@@ -22,6 +22,8 @@ interface EngineWindow {
 
 async function startGameAndGetEngine(page: Page): Promise<EngineLike> {
   await page.goto('/');
+  // เทสยิงกระสุนใช้โหมดท้าทาย (default ของเกมคือโหมดเรียนรู้)
+  await page.getByTestId('mode-challenge').click();
   await page.getByTestId('start-button').click();
   await expect(page.getByTestId('game-canvas')).toBeVisible();
   // รอให้ engine ถูกผูกกับ window (โหลดสไปรต์เสร็จ)

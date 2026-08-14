@@ -15,6 +15,28 @@ const showHof = ref(false);
     <h1 class="title">MONSTER SPELLER</h1>
     <p class="subtitle">👾 กองกำลังพิทักษ์ตัวสะกด — ยิงกระสุนมาตราตัวสะกด เปลี่ยนมอนสเตอร์ให้เป็นมิตร</p>
 
+    <!-- เลือกโหมด (docs/04-chapter-4 ข้อ 4.6 — เกมต้องเป็นสื่อการเรียนรู้ ไม่ใช่เครื่องลงโทษ) -->
+    <div class="mode-select" data-testid="mode-select">
+      <button
+        data-testid="mode-learn"
+        class="mode-btn learn"
+        :class="{ active: game.mode === 'learn' }"
+        @click="game.selectMode('learn')"
+      >
+        🎓 โหมดเรียนรู้
+        <small>เลือกมาตราจาก 3 ตัวเลือก · ไม่มีเวลา ไม่เสียแต้ม</small>
+      </button>
+      <button
+        data-testid="mode-challenge"
+        class="mode-btn challenge"
+        :class="{ active: game.mode === 'challenge' }"
+        @click="game.selectMode('challenge')"
+      >
+        ⚔️ โหมดท้าทาย
+        <small>ยิงกระสุน 8 มาตรา · จับเวลา 3 นาที</small>
+      </button>
+    </div>
+
     <!-- เลือกด่าน (content/levels — docs/04-chapter-4 ข้อ 4.9) -->
     <div class="level-select" data-testid="level-select">
       <span class="level-label">ด่าน:</span>

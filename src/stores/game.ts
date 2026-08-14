@@ -4,9 +4,11 @@ import { scoreForHit, verdictForScore } from '../game/systems/Scoring';
 import { getLevel } from '../content/levels';
 
 export type GameStatus = 'hub' | 'playing' | 'roundEnd';
+export type GameMode = 'learn' | 'challenge';
 
 interface GameState {
   status: GameStatus;
+  mode: GameMode;
   score: number;
   hp: number;
   timeLeft: number;
@@ -22,6 +24,7 @@ interface GameState {
 export const useGameStore = defineStore('game', {
   state: (): GameState => ({
     status: 'hub',
+    mode: 'learn',
     score: 0,
     hp: 3,
     timeLeft: ROUND_SECONDS,
@@ -49,11 +52,22 @@ export const useGameStore = defineStore('game', {
     verdict(state): string {
       return verdictForScore(state.score);
     },
+    /** ดาว 1-3 ในโหมดเรียนรู้ (docs/04-chapter-4 ข้อ 4.6): 100% = 3, ≥70% = 2, ตอบครบ = 1 */
+    learnStars(state): number {
+      if (state.correctHits + state.wrongHits === 0) return 1;
+      const ratio = state.correctHits / (state.correctHits + state.wrongHits);
+      if (ratio >= 1) return 3;
+      if (ratio >= 0.7) return 2;
+      return 1;
+    },
   },
 
   actions: {
     selectLevel(level: number) {
       this.level = level;
+    },
+    selectMode(mode: GameMode) {
+      this.mode = mode;
     },
     startRound() {
       this.status = 'playing';
@@ -97,10 +111,14 @@ export const useGameStore = defineStore('game', {
         if (this.timeLeft === 0) this.endRound();
       }
     },
-    /** จบรอบ (เวลาหมด / HP=0) — เปลี่ยนเป็นหน้าสรุป */
+    /** จบรอบ (เวลาหมด / HP=0 / ตอบครบในโหมดเรียนรู้) — เปลี่ยนเป็นหน้าสรุป */
     endRound() {
       if (this.status !== 'playing') return;
       this.status = 'roundEnd';
+    },
+    /** โหมดเรียนรู้: ตอบครบทุกคำ */
+    learnDone() {
+      if (this.status === 'playing') this.endRound();
     },
     backToHub() {
       this.status = 'hub';

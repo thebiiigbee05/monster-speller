@@ -8,7 +8,8 @@ test('เปิดหน้าเว็บ → เริ่มเกม → เ�
   await expect(page.getByTestId('hub-screen')).toBeVisible();
   await expect(page.getByRole('heading', { name: 'MONSTER SPELLER' })).toBeVisible();
 
-  // คลิกเริ่มเกม → เข้าฉากเกม
+  // เลือกโหมดท้าทาย (ยิงกระสุน) แล้วเริ่มเกม → เข้าฉากเกม
+  await page.getByTestId('mode-challenge').click();
   await page.getByTestId('start-button').click();
   await expect(page.getByTestId('game-screen')).toBeVisible();
 
@@ -55,6 +56,9 @@ test('เปิด Modal Settings และปรับเสียง/ควา
 
 test('เลือกด่านใน Hub แล้วเริ่มเกม — HUD แสดงด่านที่เลือก', async ({ page }) => {
   await page.goto('/');
+
+  // เลือกโหมดท้าทาย (เทสนี้ตรวจ HUD กระสุน/เวลา)
+  await page.getByTestId('mode-challenge').click();
 
   // เลือกด่าน 3
   await page.getByTestId('level-3').click();

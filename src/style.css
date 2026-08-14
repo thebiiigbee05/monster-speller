@@ -310,3 +310,115 @@ table.hof { width: 100%; border-collapse: collapse; }
 table.hof th, table.hof td { border-bottom: 1px solid rgba(255, 255, 255, 0.12); padding: 8px 10px; text-align: left; }
 table.hof th { color: var(--muted); font-weight: 500; font-size: 0.85rem; }
 table.hof td:first-child { font-family: 'Chakra Petch', sans-serif; color: var(--neon-cyan); }
+
+/* ---- เลือกโหมด (docs/04-chapter-4 ข้อ 4.6) ---- */
+.mode-select {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  max-width: 620px;
+  margin: 0 auto 26px;
+}
+.mode-btn {
+  font: inherit;
+  cursor: pointer;
+  padding: 16px 18px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: var(--panel);
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+  backdrop-filter: blur(6px);
+}
+.mode-btn small { color: var(--muted); font-size: 0.8rem; line-height: 1.5; }
+.mode-btn:hover { transform: translateY(-3px); }
+.mode-btn.learn.active {
+  border-color: var(--neon-green);
+  box-shadow: 0 0 22px rgba(57, 255, 20, 0.3);
+  background: linear-gradient(160deg, rgba(57, 255, 20, 0.14), var(--panel));
+}
+.mode-btn.challenge.active {
+  border-color: var(--neon-pink);
+  box-shadow: 0 0 22px rgba(255, 46, 151, 0.3);
+  background: linear-gradient(160deg, rgba(255, 46, 151, 0.14), var(--panel));
+}
+
+/* ---- โหมดเรียนรู้: แถบตัวเลือกมาตรา 3 ปุ่ม ---- */
+.learn-bar {
+  margin-top: 14px;
+  text-align: center;
+}
+.learn-prompt {
+  font-size: 1.1rem;
+  margin: 0 0 12px;
+  color: var(--text);
+}
+.learn-word {
+  font-family: 'Chakra Petch', sans-serif;
+  font-weight: 700;
+  font-size: 1.5rem;
+  color: var(--gold);
+  text-shadow: 0 0 12px rgba(255, 215, 0, 0.5);
+}
+.learn-choices {
+  display: flex;
+  gap: 14px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.learn-choice {
+  font: inherit;
+  font-family: 'Chakra Petch', sans-serif;
+  font-weight: 700;
+  font-size: 1.3rem;
+  cursor: pointer;
+  padding: 18px 34px;
+  min-width: 150px;
+  border-radius: 14px;
+  border: 2px solid color-mix(in srgb, var(--mc, #00e5ff) 60%, transparent);
+  background: var(--panel);
+  color: var(--text);
+  transition: transform 0.13s, box-shadow 0.13s, background 0.13s;
+}
+.learn-choice:hover:not(:disabled) {
+  transform: translateY(-4px) scale(1.04);
+  box-shadow: 0 10px 26px color-mix(in srgb, var(--mc, #00e5ff) 35%, transparent);
+}
+.learn-choice.correct {
+  border-color: var(--neon-green);
+  background: rgba(57, 255, 20, 0.18);
+  box-shadow: 0 0 26px rgba(57, 255, 20, 0.55);
+  animation: choice-pop 0.4s ease;
+  color: var(--neon-green);
+}
+.learn-choice.wrong { animation: choice-shake 0.4s ease; border-color: var(--neon-red); }
+.learn-choice:disabled { opacity: 0.45; cursor: default; }
+@keyframes choice-pop {
+  0% { transform: scale(0.9); }
+  60% { transform: scale(1.12); }
+  100% { transform: scale(1); }
+}
+@keyframes choice-shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-7px); }
+  50% { transform: translateX(7px); }
+  75% { transform: translateX(-4px); }
+}
+
+/* ---- สรุปโหมดเรียนรู้: ดาว ---- */
+.summary-stars {
+  font-size: 2.6rem;
+  margin: 6px 0 14px;
+  letter-spacing: 6px;
+  color: var(--gold);
+  text-shadow: 0 0 18px rgba(255, 215, 0, 0.65);
+  animation: star-pop 0.6s ease;
+}
+@keyframes star-pop {
+  0% { transform: scale(0.3); opacity: 0; }
+  70% { transform: scale(1.15); }
+  100% { transform: scale(1); opacity: 1; }
+}
