@@ -109,13 +109,27 @@ NO shadow, NO text, NO letters, NO watermark, NO glow outside the orb.
 | โล่พลังงาน | หกเหลี่ยมโปร่ง | เงาสีเขียว |
 | เซนเซอร์แม่นยำ | จานดาวเทียม | จุดเรดาร์กะพริบ |
 
+**สีจริงต่อชิ้น (ใช้ในพรอมต์):**
+
+| ชิ้นส่วน | เซลล์ (คอลัมน์,แถว) | สีหลัก | สีรอง |
+|---|---|---|---|
+| เครื่องยนต์เทอร์โบ | (0,0) ซ้ายบน | ฟ้า `#00e5ff` | เปลวทอง `#ffd700` |
+| ปืนเลเซอร์คู่ | (1,0) ขวาบน | ชมพู `#ff2e97` | ปลายฟ้า `#00e5ff` |
+| โล่พลังงาน | (0,1) ซ้ายล่าง | เขียวน้ำทะเล `#2dd4bf` | โครงฟ้า `#00e5ff` |
+| เซนเซอร์แม่นยำ | (1,1) ขวาล่าง | ทอง `#ffd700` | จุดเรดาร์ชมพู `#ff2e97` |
+
 **พรอมต์ (PEP — กริด 2×2):**
 ```text
-4 glowing spaceship upgrade parts for "Monster Speller" (engine, twin laser,
-energy shield, sensor dish). Flat 2D sci-fi, neon glow, gold/cyan/pink accents,
-kid-friendly. LAYOUT: 2x2 grid = 4 cells (64x64 each), TOTAL 128x128 px,
-NO margin. Grid lines at 0/64/128, pure background color. 4px border per cell.
-BACKGROUND: flat solid pure green #00ff00 ONLY. NO shadow, NO text, NO watermark.
+4 glowing spaceship upgrade parts for "Monster Speller".
+Cell (0,0): turbo engine — neon cyan #00e5ff body, gold #ffd700 flame nozzle.
+Cell (1,0): twin laser — neon pink #ff2e97 barrels, cyan #00e5ff tips.
+Cell (0,1): energy shield — teal #2dd4bf hexagon, cyan #00e5ff outline.
+Cell (1,1): targeting sensor — gold #ffd700 dish, pink #ff2e97 radar dot.
+All cells: flat 2D sci-fi, neon glow, kid-friendly, same size 64x64.
+LAYOUT: 2x2 grid = 4 cells (64x64 each), TOTAL 128x128 px, NO margin.
+Grid lines at 0/64/128, pure background color. 4px border per cell.
+BACKGROUND: flat solid pure green #00ff00 ONLY. NO shadow, NO glow outside
+the part, NO text, NO watermark.
 ```
 > **คำสั่ง:** `ai-sprite-process.py <parts.png> --name part --cell 64 --out-dir assets/items/parts/ --grid-bg "#00ff00" --expect-grid 2x2 --require-check`
 
@@ -128,13 +142,27 @@ BACKGROUND: flat solid pure green #00ff00 ONLY. NO shadow, NO text, NO watermark
 | กระสุนกระจาย (Spread) | ยิง 3 ทิศ 3 วิ | ส้ม-เหลือง |
 | ดาวคะแนน 2× | คะแนนคูณ 2 | ทอง |
 
+**สีจริงต่อไอเท็ม (ใช้ในพรอมต์):**
+
+| ไอเท็ม | เซลล์ (คอลัมน์,แถว) | สีหลัก | สีรอง |
+|---|---|---|---|
+| กระสุนเจาะเกราะ (Pierce) | (0,0) ซ้ายบน | ม่วง `#a855f7` | ขาว `#ffffff` |
+| ชะลอเวลา (Slow-mo) | (1,0) ขวาบน | ฟ้า `#00e5ff` | น้ำเงิน `#2563eb` |
+| กระสุนกระจาย (Spread) | (0,1) ซ้ายล่าง | ส้ม `#ffb703` | เหลือง `#ffd700` |
+| ดาวคะแนน 2× | (1,1) ขวาล่าง | ทอง `#ffd700` | ขาว `#fff6e8` |
+
 **พรอมต์ (PEP — กริด 2×2):**
 ```text
-4 collectible power-up icons for "Monster Speller" (pierce bullet, slow-mo clock,
-spread shot, 2x score star). Neon glowing, flat 2D sci-fi, kid-friendly.
+4 collectible power-up icons for "Monster Speller".
+Cell (0,0): pierce bullet — purple #a855f7 orb, white #ffffff core.
+Cell (1,0): slow-mo clock — cyan #00e5ff clock face, navy #2563eb hands.
+Cell (0,1): spread shot — orange #ffb703 three-way arrow, gold #ffd700 tips.
+Cell (1,1): 2x score star — gold #ffd700 star, soft white #fff6e8 glow.
+All cells: neon glowing, flat 2D sci-fi, kid-friendly, same size 64x64.
 LAYOUT: 2x2 grid = 4 cells (64x64 each), TOTAL 128x128 px, NO margin.
 Grid lines at 0/64/128, pure background color. 4px border per cell.
-BACKGROUND: flat solid pure green #00ff00 ONLY. NO shadow, NO text, NO watermark.
+BACKGROUND: flat solid pure green #00ff00 ONLY. NO shadow, NO glow outside
+the icon, NO text, NO watermark.
 ```
 > **คำสั่ง:** `ai-sprite-process.py <powerups.png> --name powerup --cell 64 --out-dir assets/items/powerups/ --grid-bg "#00ff00" --expect-grid 2x2 --require-check`
 
@@ -150,6 +178,59 @@ BACKGROUND: flat solid pure green #00ff00 ONLY. NO shadow, NO text, NO watermark
 >
 > **คำสั่ง (รวมเอฟเฟกต์เป็นชุด — กริดตามจำนวนไอเท็ม เช่น 5 ในแถวเดียว):**
 > `ai-sprite-process.py <fx.png> --name fx --cell 32 --out-dir assets/ui/fx/ --grid-bg "#00ff00" --expect-grid 1x5 --require-check`
+
+---
+
+### 15.4.5 เทมเพลตสากล PEP — สินทรัพย์เล็ก (ชิ้นส่วน/ไอเท็ม/ไอคอน)
+
+ใช้กับของเล็ก ๆ ที่ต้องตัดเป็น sprite เดี่ยว (ไม่เกิน 4–8 ชิ้น/ชุด)
+— เติม `<รายการ>` `<สีต่อชิ้น>` ตามตารางด้านล่าง แล้วคัดลอกไป AI
+
+```text
+<N> game items for "Monster Speller", one per cell, same size, same style.
+<รายการ + สี hex ต่อชิ้น — ระบุชัดว่าเซลล์ไหนคืออะไร>
+Flat 2D sci-fi, neon glow, kid-friendly, cute, crisp dark outline.
+LAYOUT: <COLS>x<ROWS> grid = <N> cells (<SIZE>x<SIZE> each), TOTAL
+<W>x<H> px, NO margin. Grid lines at exact multiples of <SIZE> px, pure
+background color. 4px border per cell.
+BACKGROUND: flat solid pure green #00ff00 ONLY. NO shadow, NO glow outside
+the item, NO text, NO letters, NO watermark.
+```
+
+**ตัวแปรที่ต้องเติม (ตามจำนวนชิ้น):**
+
+| ชุด | `<N>` | กริด | เซลล์ | ขนาดรวม | `--expect-grid` |
+|---|---|---|---|---|---|
+| ชิ้นส่วนยาน 4 ชิ้น | 4 | 2×2 | 64 | 128×128 | `2x2` |
+| ไอเท็ม 4 ชิ้น | 4 | 2×2 | 64 | 128×128 | `2x2` |
+| กระสุน 8 มาตรา | 8 | 4×2 | 64 | 256×128 | `4x2` |
+| ไอคอน HUD/เอฟเฟกต์ | 5 | 1×5 | 32 | 160×32 | `1x5` |
+
+**คำสั่ง (เปลี่ยน `<name>` + กริดตามตาราง):**
+```bash
+./.venv-scripts/Scripts/python.exe scripts/ai-sprite-process.py <sheet.png> \
+    --name <name> --cell <SIZE> --out-dir assets/<ที่เก็บ>/ \
+    --grid-bg "#00ff00" --expect-grid <COLS>x<ROWS> --require-check
+```
+
+**Checklist ตรวจผล (ทุกชุด):**
+
+- [ ] จำนวนชิ้นครบตามกริด (ตรวจด้วย `--check` → `--expect-grid` ตรงกัน)
+- [ ] ชิ้นไหนอยู่เซลล์ไหนตรงตามตารางแมป (ดูผล manifest + ตาดู)
+- [ ] ทุกชิ้นขนาดเท่ากัน กลางเซลล์ (กันตอน normalize เอียง)
+- [ ] สีตรง hex ที่ระบุ — ไม่มีสีเขียวเข้มปน (กัน false positive เงา)
+- [ ] ไม่มีข้อความ/โลโก้/ลายน้ำ (AI ชอบแอบใส่)
+- [ ] ผ่าน `--check` → exit `0` ก่อนเอาไปใช้
+
+**ถ้า AI ทำไม่ตรง (แนวทางแก้):**
+
+| ปัญหา | แก้ |
+|---|---|
+| ชิ้นเกิน/ขาด (ได้ 5 จาก 4) | เพิ่ม `"exactly <N> cells, no duplicates, no extra items"` |
+| สลับตำแหน่งชิ้น | ระบุ `"Cell (x,y) must be <ชื่อ>"` ซ้ำทุกชิ้นในพรอมต์ |
+| พื้นไม่เขียวล้วน | เพิ่ม `"background MUST be flat solid pure green #00ff00, NO gradient"` หรือเปลี่ยนเป็นม่วง `#ff00ff` + `--grid-bg "#ff00ff"` |
+| `--check` เตือนเงา | ตรวจสีเขียวเข้มบนชิ้น → เปลี่ยนเป็นโครงน้ำเงินเข้ม `#1a2333` แล้ว gen ใหม่ |
+| ชิ้นติดขอบ | เพิ่ม `"each item must be smaller, min 8px clearance from cell edges"` |
 
 ---
 
