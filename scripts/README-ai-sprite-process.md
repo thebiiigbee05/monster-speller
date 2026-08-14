@@ -24,6 +24,20 @@ node scripts/pipeline.mjs walker     # เฉพาะตัว (walker/runner/t
 | **โหมดกริด (PEP)** ⭐ | `--grid-bg #00ff00` | พรอมต์ที่บังคับ "พื้นสีเดียว + ไม่มีเงา" (ดู `design/prompt-processability-spec.md`) | key สีเดียว — เร็ว/แม่น 100% |
 | **โหมด flood** | (ไม่ใส่ `--grid-bg`) | ภาพ AI ทั่วไป: ไล่เฉด/เกรน/สีมุมไม่ตรง | flood fill + interpolate มุม 4 มุม + ลบเงา |
 
+## 🔬 ตรวจจับพิกัดเฟรมด้วย OpenCV (default)
+
+สคริปต์ใช้ **OpenCV (connected components + morphology close + merge กล่องชิ้นส่วน)**
+หาพิกัดกล่องแต่ละเฟรม — แม่นกว่า PIL (เดิมใช้ผลคูณ col×row groups → เฟรมหลอก
+เมื่อตัวถูกแยกเป็นชิ้น/มีขีดลอย) มี `cv2` → ใช้ OpenCV · ไม่มี → fallback PIL อัตโนมัติ
+
+```bash
+# ติดตั้ง (ทำครั้งเดียว):
+./.venv-scripts/Scripts/python.exe -m pip install opencv-python-headless
+```
+
+ตรวจว่าใช้ engine ไหน: ดูข้อความ `ตรวจจับ: OpenCV (connected components)`
+หรือ `ตรวจจับ: PIL (col×row groups)` ตอนรัน
+
 ## 🔍 โหมดตรวจภาพก่อนใช้ (--check)
 
 ตรวจ sheet ว่าตรงสัญญา PEP ไหม **โดยไม่สร้างไฟล์** — ใช้กับภาพ AI ที่เพิ่งได้มา

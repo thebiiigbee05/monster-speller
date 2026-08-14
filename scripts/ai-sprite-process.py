@@ -303,6 +303,86 @@ def detect_frames(img, threshold_ratio=0.15, min_gap=1):
     frames.sort(key=lambda f: (f["y"], f["x"]))
     return frames
 
+def _merge_boxes(boxes, gap_thresh=12, overlap_frac=0.25):
+    """รวมกล่องชิ้นส่วนของตัวเดียวกัน (AI วาดหัว/แขน/ขาแยกกัน → blob คนละก้อน):
+    รวมเมื่อ (a) ซ้อนแนวตั้ง >= overlap_frac ของอันสั้น + ช่องว่างแนวนอน <= gap_thresh
+    หรือ (b) ซ้อนแนวนอน >= overlap_frac + ช่องว่างแนวตั้ง <= gap_thresh
+    กันการรวมตัวละครข้างกัน: ระยะห่างระหว่างเซลล์ (>20px) > gap_thresh"""
+    boxes = [list(b[:4]) for b in boxes]
+    changed = True
+    while changed:
+        changed = False
+        out, merged_into = [], set()
+        for i, bi in enumerate(boxes):
+            if i in merged_into:
+                continue
+            for j in range(i + 1, len(boxes)):
+                if j in merged_into:
+                    continue
+                bj = boxes[j]
+                ox = min(bi[0] + bi[2], bj[0] + bj[2]) - max(bi[0], bj[0])
+                oy = min(bi[1] + bi[3], bj[1] + bj[3]) - max(bi[1], bj[1])
+                gx = max(bj[0] - (bi[0] + bi[2]), bi[0] - (bj[0] + bj[2]), 0)
+                gy = max(bj[1] - (bi[1] + bi[3]), bi[1] - (bj[1] + bj[3]), 0)
+                join = False
+                if oy > 0 and oy >= min(bi[3], bj[3]) * overlap_frac and gx <= gap_thresh:
+                    join = True
+                elif ox > 0 and ox >= min(bi[2], bj[2]) * overlap_frac and gy <= gap_thresh:
+                    join = True
+                if join:
+                    x0, y0 = min(bi[0], bj[0]), min(bi[1], bj[1])
+                    x1, y1 = max(bi[0] + bi[2], bj[0] + bj[2]), max(bi[1] + bi[3], bj[1] + bj[3])
+                    bi[:] = [x0, y0, x1 - x0, y1 - y0]
+                    merged_into.add(j)
+                    changed = True
+            out.append(bi)
+        boxes = out
+    return boxes
+
+
+def detect_frames_cv(img, close_kernel=7, min_area=0.0005, merge_gap=12,
+                     overlap_frac=0.25):
+    """ตรวจจับกล่องเฟรมด้วย OpenCV connected components:
+    alpha mask → morphology CLOSE (เชื่อมชิ้นส่วนห่างกัน <= kernel) →
+    connectedComponentsWithStats → กรอง (พื้นที่เล็ก / แตะขอบ >=2 ด้าน) →
+    merge กล่องชิ้นส่วนตัวเดียวกัน → เรียง (y, x) แบบ row-major
+    คืน list dict {x,y,w,h} หรือ None ถ้าไม่มี cv2/numpy (เรียก detect_frames แทน)"""
+    try:
+        import cv2
+        import numpy as np
+    except ImportError:
+        return None
+    arr = np.array(img.convert("RGBA"))
+    mask = (arr[:, :, 3] > 8).astype(np.uint8) * 255
+    kernel = np.ones((close_kernel, close_kernel), np.uint8)
+    mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
+    n, _, stats, _ = cv2.connectedComponentsWithStats(mask, 8)
+    H, W = mask.shape
+    min_px = max(64, int(W * H * min_area))
+    blobs = []
+    for i in range(1, n):
+        x, y, w, h, area = stats[i]
+        if area < min_px:
+            continue
+        touches = int(x <= 0) + int(y <= 0) + int(x + w >= W - 1) + int(y + h >= H - 1)
+        if touches >= 2:
+            continue
+        blobs.append((int(x), int(y), int(w), int(h)))
+    merged = _merge_boxes(blobs, gap_thresh=merge_gap, overlap_frac=overlap_frac)
+    frames = [{"x": b[0], "y": b[1], "w": b[2], "h": b[3]} for b in merged]
+    frames.sort(key=lambda f: (f["y"], f["x"]))
+    return frames
+
+
+def _pick_detector(img, threshold, min_gap):
+    """เลือก engine ตรวจจับ: OpenCV (แม่นกว่า) → PIL (fallback)
+    คืน (frames, engine_label)"""
+    frames = detect_frames_cv(img)
+    if frames is not None:
+        return frames, "OpenCV (connected components)"
+    return detect_frames(img, threshold, min_gap), "PIL (col×row groups)"
+
+
 def frame_signature(img, box, size=16):
     """ลายเซ็นของเฟรม (normalized thumbnail) — กันตำแหน่งตัวขยับภายในกล่อง
     คืน list RGB 16x16 ใช้เทียบความเหมือนระหว่างเฟรม (0 = เหมือน 100 = ต่าง)"""
@@ -733,9 +813,9 @@ def main():
             img = remove_shadows(img, darken=args.shadow_darken,
                                  sat_thresh=args.shadow_sat,
                                  bottom_frac=args.shadow_bottom)
-        frames = detect_frames(img, args.threshold, args.min_gap)
+        frames, _engine = _pick_detector(img, args.threshold, args.min_gap)
         print(f"โหมดกริด: bg {args.grid_bg} (ลบพื้น tol={args.tol}) → "
-              f"เฟรม {len(frames)} ตัว")
+              f"เฟรม {len(frames)} ตัว · ตรวจจับ: {_engine}")
         # ตรวจยืนยันกริดถ้าระบุ --expect-grid
         if args.expect_grid and frames:
             ex_cols, ex_rows = args.expect_grid.lower().split("x")
@@ -761,11 +841,11 @@ def main():
                                  sat_thresh=args.shadow_sat,
                                  bottom_frac=args.shadow_bottom)
 
-        frames = detect_frames(img, args.threshold, args.min_gap)
+        frames, _engine = _pick_detector(img, args.threshold, args.min_gap)
         if not frames:
             print("ไม่พบเฟรม — ลองลด --threshold หรือตรวจภาพว่ามีเนื้อจริงไหม")
             return 1
-        print(f"พบเฟรม {len(frames)} ตัว")
+        print(f"พบเฟรม {len(frames)} ตัว · ตรวจจับ: {_engine}")
 
     # ขั้นหลังตัดเฟรม: กรองเฟรมแบน/เงา + ลบเฟรมซ้ำ (ก่อนนับกริด/บันทึก)
     if args.drop_flat:

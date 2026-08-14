@@ -3,8 +3,8 @@
   "source": "walker-sheet.png",
   "frameSize": 128,
   "frames": 4,
-  "rows": 1,
-  "cols": 4,
+  "rows": 4,
+  "cols": 1,
   "frameFiles": [
     "walker_00.png",
     "walker_01.png",
