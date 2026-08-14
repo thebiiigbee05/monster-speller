@@ -22,3 +22,6 @@ coverage/
 
 # python venv (scripts)
 .venv-scripts/
+
+# python
+__pycache__/
