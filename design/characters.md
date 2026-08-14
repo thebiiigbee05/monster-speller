@@ -2,6 +2,8 @@
 
 > เอกสารกลางสำหรับนักออกแบบ/นักวาดสไปรต์/นักพัฒนา — ตรงกับโค้ดจริง (`src/game/entities/Monster.ts`, `scripts/generate-sprites.mjs`)
 > ธีม: Neon Sci-Fi 2D — สไปรต์ 64×64 (กริดวาด 32×32 ×2)
+>
+> 🔗 **เอกสารอาร์ต 3 ชั้น** (Character Bible + Sheet + Sprite spec) ดูที่ [`design/art/`](art/README.md)
 
 ---
 

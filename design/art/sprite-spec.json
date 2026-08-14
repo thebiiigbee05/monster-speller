@@ -1,0 +1,94 @@
+{
+  "$schema": "Sprite Animation Spec — Monster Speller (design/art ชั้นที่ 3)",
+  "version": "1.0",
+  "note": "อ้างอิงโค้ดจริง: constants.ts + SpriteRenderer.ts + Monster.ts — ถ้าแก้โค้ดต้องอัปเดตไฟล์นี้ด้วย",
+  "sheet": {
+    "file": "public/assets/sprites/monsters-sheet.png",
+    "cellW": 64,
+    "cellH": 64,
+    "rows": 4,
+    "cols": 10
+  },
+  "global": {
+    "pivot": { "x": "center", "y": "bottom" },
+    "drawSizeW": 108,
+    "drawSizeH": 108,
+    "hitboxScale": { "note": "hitbox = ตัวมอนสเตอร์ ไม่รวมหนวด/เขา/ปีก", "w": 0.72, "h": 0.85 }
+  },
+  "timing": {
+    "walkFrameSec": 0.3,
+    "stunSec": 2.0,
+    "explodeSec": 0.36,
+    "friendlySec": 0.9,
+    "walkLoop": "walk1→walk2→walk3→walk4 (วน)",
+    "explodeLoop": "explode1→explode2→explode3 (จบแล้วเปลี่ยนเป็น friendly)",
+    "friendlyLoop": "friendly1 (0.45s) → friendly2 (0.45s) → escaped"
+  },
+  "monsters": [
+    {
+      "id": "walker",
+      "row": 0,
+      "name": "วอล์กเกอร์ (แม่กก)",
+      "color": "#39ff14",
+      "pivotOffset": { "x": 0, "y": 0 },
+      "hitbox": { "w": 78, "h": 92, "note": "วงรีตัวกลม ไม่รวมหนวด" },
+      "states": {
+        "walking": { "frames": ["walk1", "walk2", "walk3", "walk4"], "fps": 3.33 },
+        "idle": { "frames": ["walk1", "walk2", "walk3", "walk4"], "fps": 3.33, "note": "โหมดเรียนรู้ — เดินวนอยู่กับที่" },
+        "stunned": { "frames": ["stun"], "sec": 2.0 },
+        "exploding": { "frames": ["explode1", "explode2", "explode3"], "sec": 0.36 },
+        "friendly": { "frames": ["friendly1", "friendly2"], "sec": 0.9 }
+      }
+    },
+    {
+      "id": "runner",
+      "row": 1,
+      "name": "รันเนอร์ (แม่กด)",
+      "color": "#ff2e97",
+      "pivotOffset": { "x": 0, "y": 0 },
+      "hitbox": { "w": 72, "h": 96, "note": "ลำตัวเพรียวเอียง — ไม่รวมครีบหลัง" },
+      "states": {
+        "walking": { "frames": ["walk1", "walk2", "walk3", "walk4"], "fps": 3.33 },
+        "idle": { "frames": ["walk1", "walk2", "walk3", "walk4"], "fps": 3.33 },
+        "stunned": { "frames": ["stun"], "sec": 2.0 },
+        "exploding": { "frames": ["explode1", "explode2", "explode3"], "sec": 0.36 },
+        "friendly": { "frames": ["friendly1", "friendly2"], "sec": 0.9 }
+      }
+    },
+    {
+      "id": "tank",
+      "row": 2,
+      "name": "แทงก์ (แม่กบ)",
+      "color": "#a855f7",
+      "pivotOffset": { "x": 0, "y": 0 },
+      "hitbox": { "w": 84, "h": 88, "note": "ตัวอ้วนกลม — ไม่รวมหัวแป๊กทอง" },
+      "states": {
+        "walking": { "frames": ["walk1", "walk2", "walk3", "walk4"], "fps": 3.33 },
+        "idle": { "frames": ["walk1", "walk2", "walk3", "walk4"], "fps": 3.33 },
+        "stunned": { "frames": ["stun"], "sec": 2.0 },
+        "exploding": { "frames": ["explode1", "explode2", "explode3"], "sec": 0.36 },
+        "friendly": { "frames": ["friendly1", "friendly2"], "sec": 0.9 }
+      }
+    },
+    {
+      "id": "boss",
+      "row": 3,
+      "name": "ราชามอนสเตอร์ (แม่กน)",
+      "color": "#ff3b3b",
+      "pivotOffset": { "x": 0, "y": 0 },
+      "hitbox": { "w": 90, "h": 100, "note": "ตัวใหญ่สุด — ไม่รวมเขาทอง" },
+      "states": {
+        "walking": { "frames": ["walk1", "walk2", "walk3", "walk4"], "fps": 3.33 },
+        "idle": { "frames": ["walk1", "walk2", "walk3", "walk4"], "fps": 3.33 },
+        "stunned": { "frames": ["stun"], "sec": 2.0 },
+        "exploding": { "frames": ["explode1", "explode2", "explode3"], "sec": 0.36 },
+        "friendly": { "frames": ["friendly1", "friendly2"], "sec": 0.9 }
+      }
+    }
+  ],
+  "usage": {
+    "engine": "GameEngine ใช้ sprite.draw(ctx, m, m.x - 54, m.y - 54, 108, 108) — pivot กลางล่าง = ฐานตัว",
+    "hitDetection": "HIT_RADIUS = 60 (ระยะชนกระสุน) — ใช้ hitbox spec เป็นข้อมูลอ้างอิงเมื่อทำโหมดแม่นยำ (Sprint 3+)",
+    "generate": "สร้าง/ปรับเฟรมด้วย scripts/generate-sprites.mjs แล้ว rerun เพื่ออัปเดต sheet + manifest"
+  }
+}
