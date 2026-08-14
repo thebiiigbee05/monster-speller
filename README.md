@@ -122,6 +122,7 @@ git push -u origin main
 | เทมเพลตสินทรัพย์เล็ก (เติมเอง) | docs/15 → 15.4.5 | ตามตาราง |
 | พื้นหลัง / ฉาก | docs/15 → 15.5–15.7 | — (ไม่ต้อง PEP) |
 | Workflow ตรวจภาพเต็ม | [`docs/06-chapter-6-ui-ux-graphics.md`](docs/06-chapter-6-ui-ux-graphics.md) → 6.7 | — |
+| **Pipeline กระบวนการ (6 ระยะ + HITL)** | [`design/pipeline-process.md`](design/pipeline-process.md) | — |
 
 **เครื่องมือตรวจ:**
 - `scripts/ai-sprite-process.py` — ลบพื้น → ตัดเฟรม → manifest (`--check`/`--require-check`/`--remove-shadows`)
