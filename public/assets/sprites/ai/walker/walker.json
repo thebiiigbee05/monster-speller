@@ -2,15 +2,14 @@
   "asset": "walker",
   "source": "walker-sheet.png",
   "frameSize": 128,
-  "frames": 5,
+  "frames": 4,
   "rows": 1,
-  "cols": 5,
+  "cols": 4,
   "frameFiles": [
     "walker_00.png",
     "walker_01.png",
     "walker_02.png",
-    "walker_03.png",
-    "walker_04.png"
+    "walker_03.png"
   ],
   "animationFps": 8,
   "loop": true,

@@ -321,27 +321,37 @@ def sig_diff(a, b):
     return sum(abs(x - y) for x, y in zip(a, b)) / (len(a) * 255) * 100
 
 
-def drop_flat_frames(img, frames, ratio=0.5):
-    """กรองเฟรมแบน/เงาล้วน: ความสูงเนื้อ < ratio × ค่ากลาง(median) ของทุกเฟรม
-    ใช้จับ 'แถบเงา' ที่ AI วาดใต้ตัวแล้วตัดเป็นเฟรมหลอก (h ~10-15% ของตัวจริง)
-    คืน (kept, dropped) — dropped = [(index, h, median_h)]"""
-    heights = []
+def _upper_median(vals):
+    """median ของ 'ครึ่งบน' — ทนเศษ/ชิ้นเล็กจำนวนมาก (median ธรรมดาจะถูกดึงลงต่ำ)"""
+    s = sorted(vals)
+    m = s[len(s) // 2]
+    upper = [v for v in s if v > m]
+    return upper[len(upper) // 2] if upper else m
+
+
+def drop_flat_frames(img, frames, ratio=0.5, strip_ratio=0.35):
+    """กรองเฟรมหลอก 2 แบบ (เทียบ upper-median ของเฟรมทั้งหมด):
+    - 'flat'  : แถบแบน/เงา — ความสูงเนื้อ < ratio × median ความสูง
+    - 'strip' : เส้นตั้ง/ขีดลอย — ความกว้างเนื้อ < strip_ratio × median ความกว้าง
+      (AI มักวาดขีดขาว/แสงแนวตั้งลอยข้างตัว สูงเท่าตัวจริง → กรองด้วยความสูงไม่ทัน)
+    คืน (kept, dropped) — dropped = [(index, h, w, ref_h, ref_w, reason)]"""
+    dims = []
     for box in frames:
         bbox = img.crop((box["x"], box["y"], box["x"] + box["w"], box["y"] + box["h"])).getbbox()
-        heights.append((bbox[3] - bbox[1]) if bbox else 0)
-    if not heights:
+        dims.append(((bbox[3] - bbox[1] + 1, bbox[2] - bbox[0] + 1)) if bbox else (0, 0))
+    if not dims:
         return frames, []
-    # ใช้ median ของ "ครึ่งบน" (upper median) แทน median ทั้งหมด —
-    # ถ้าภาพมีเศษ/เงาเล็กจำนวนมาก (เช่น เงา 8px × 14 ตัว) median ธรรมดาจะถูก
-    # ดึงลงต่ำ → เศษผ่านเกณฑ์ไปหมด. ค่าที่สูงกว่าครึ่งบนคือ "ตัวจริง" จึงทนเศษได้
-    s = sorted(heights)
-    median_all = s[len(s) // 2]
-    upper = [v for v in s if v > median_all]
-    ref = upper[len(upper) // 2] if upper else median_all
+    ref_h = _upper_median([d[0] for d in dims])
+    ref_w = _upper_median([d[1] for d in dims])
     kept, dropped = [], []
-    for i, (box, h) in enumerate(zip(frames, heights)):
-        if ref > 0 and h < ref * ratio:
-            dropped.append((i, h, ref))
+    for i, (box, (h, w)) in enumerate(zip(frames, dims)):
+        reason = None
+        if ref_h > 0 and h < ref_h * ratio:
+            reason = "flat"
+        elif ref_w > 0 and w < ref_w * strip_ratio:
+            reason = "strip"
+        if reason:
+            dropped.append((i, h, w, ref_h, ref_w, reason))
         else:
             kept.append(box)
     return kept, dropped
@@ -663,6 +673,8 @@ def main():
                     help="กรองเฟรมแบน/เงาล้วน (ความสูงเนื้อ < median×ratio) ก่อนบันทึก")
     ap.add_argument("--flat-ratio", type=float, default=0.5,
                     help="เกณฑ์เฟรมแบน เทียบ median (default 0.5 = สูงไม่ถึงครึ่ง)")
+    ap.add_argument("--strip-ratio", type=float, default=0.35,
+                    help="เกณฑ์เส้นตั้ง/ขีดลอย เทียบ median ความกว้าง (default 0.35 = กว้างไม่ถึง 35%%)")
     ap.add_argument("--dedupe", action="store_true",
                     help="ลบเฟรมซ้ำ (ท่าเดิมแปะหลายรอบ) — เก็บท่าที่ต่างกันจริง")
     ap.add_argument("--dup-threshold", type=float, default=3.0,
@@ -757,15 +769,20 @@ def main():
 
     # ขั้นหลังตัดเฟรม: กรองเฟรมแบน/เงา + ลบเฟรมซ้ำ (ก่อนนับกริด/บันทึก)
     if args.drop_flat:
-        frames, dropped = drop_flat_frames(img, frames, ratio=args.flat_ratio)
+        frames, dropped = drop_flat_frames(img, frames, ratio=args.flat_ratio,
+                                           strip_ratio=args.strip_ratio)
         if dropped:
-            print(f"🧹 drop-flat: ลบเฟรมแบน {len(dropped)} ตัว (สูง < "
-                  f"{args.flat_ratio:.0%} × median)")
-            for i, h, med in dropped:
-                print(f"   - เฟรม#{i}: สูง {h}px (median {med}px) — เงา/แถบไร้สี")
+            print(f"🧹 drop-flat: ลบเฟรมหลอก {len(dropped)} ตัว")
+            for i, h, w, ref_h, ref_w, reason in dropped:
+                if reason == "strip":
+                    print(f"   - เฟรม#{i}: เส้นตั้ง กว้าง {w}px < "
+                          f"{args.strip_ratio:.0%}×median({ref_w}px) — ขีด/แสงลอย")
+                else:
+                    print(f"   - เฟรม#{i}: แถบแบน สูง {h}px < "
+                          f"{args.flat_ratio:.0%}×median({ref_h}px) — เงา/แถบไร้สี")
             print(f"   เหลือเฟรม {len(frames)} ตัว")
         else:
-            print("🧹 drop-flat: ไม่พบเฟรมแบน (ทุกเฟรมสูงพอ) ✅")
+            print("🧹 drop-flat: ไม่พบเฟรมหลอก (ทุกเฟรมสูง/กว้างพอ) ✅")
     if args.dedupe:
         frames, removed = dedupe_frames(img, frames, threshold=args.dup_threshold)
         if removed:
