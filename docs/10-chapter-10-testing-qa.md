@@ -8,6 +8,7 @@
 
 ```
           /\   E2E (Playwright) — เส้นทางหลัก: เลือกด่าน → เล่น 3 นาที → สรุป
+         /  \   + QA Harness สไปรต์: วอล์ก 8 เฟรม + mirror (sprite-cycle.spec.ts)
          /  \  2–3%
         /----\
        /  Integration  \  GameEngine ↔ Pinia store ↔ Canvas (10%)
@@ -17,6 +18,8 @@
 ```
 
 **หลักการ:** ทดสอบแต่เนิ่น ๆ ทุก Pull Request ผ่าน CI (typecheck + unit + lint); การทดสอบเป็นส่วนหนึ่งของ DoD (บทที่ 8.3); งานที่ทดสอบยาก (AR) → แยกตรรกะเป็นฟังก์ชันบริสุทธิ์ + ทดสอบด้วยมือ
+
+**QA Harness สไปรต์:** `public/sprite-test.html` (หน้าเล่นวนวอล์กไซเคิลจาก manifest/PNG จริง) + `tests/e2e/sprite-cycle.spec.ts` ตรวจ 3 อย่าง — manifest ครบ 8 เฟรม · วนครบ 0–7 แล้ว loop · เฟรม 4–7 = สะท้อนของ 0–3 ระดับพิกเซล + ท่าไม่ซ้ำ (กัน AI แปะท่าซ้ำ/จอภาพ mirror ผิด)
 
 ## 10.2 การทดสอบระดับหน่วยและบูรณาการ
 

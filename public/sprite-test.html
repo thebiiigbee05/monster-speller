@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>QA Harness — Walker Walk-Cycle (8 เฟรม + mirror)</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 14px;
+    background: #0b0f1e; color: #e6f7ff;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+  }
+  h1 { font-size: 18px; margin: 0; letter-spacing: 1px; }
+  .tag { font-size: 12px; color: #7fdbff; opacity: .85; }
+  #status { font-size: 14px; min-height: 20px; color: #ffd75e; }
+  #anim {
+    width: 256px; height: 256px;
+    image-rendering: pixelated;
+    border: 2px solid #39ff14; border-radius: 8px;
+    background: #05070f; box-shadow: 0 0 24px rgba(57,255,20,.25);
+  }
+  .info { display: flex; gap: 18px; font-size: 13px; color: #b8d4e8; }
+  .info b { color: #39ff14; font-variant-numeric: tabular-nums; }
+  pre {
+    max-width: 640px; font-size: 11px; line-height: 1.5;
+    background: #05070f; border: 1px solid #1d2b45; border-radius: 8px;
+    padding: 10px 14px; color: #9fd4ff; overflow: auto;
+  }
+</style>
+</head>
+<body>
+  <h1>QA HARNESS · WALKER WALK-CYCLE</h1>
+  <div class="tag">8 เฟรม (4 ท่า + mirror) · แหล่งข้อมูล: assets/sprites/ai/walker/</div>
+  <p id="status" data-testid="harness-status">กำลังโหลด…</p>
+  <canvas id="anim" width="256" height="256"></canvas>
+  <div class="info">
+    <span>เฟรม <b id="frame-idx" data-testid="frame-idx">–</b></span>
+    <span>ท่า <b id="pose-name" data-testid="pose-name">–</b></span>
+    <span>รอบ <b id="cycle-count" data-testid="cycle-count">0</b></span>
+    <span>fps <b id="fps-label" data-testid="fps-label">–</b></span>
+  </div>
+  <pre id="verify-result" data-testid="verify-result">ยังไม่ตรวจ</pre>
+
+<script>
+(() => {
+  'use strict';
+  const MANIFEST_URL = 'assets/sprites/ai/walker/walker.json';
+  const DIR = MANIFEST_URL.slice(0, MANIFEST_URL.lastIndexOf('/') + 1);
+  const FRAME = 128; // frameSize จาก manifest (ตรวจแล้วต้องเท่ากัน)
+
+  const canvas = document.getElementById('anim');
+  const ctx = canvas.getContext('2d');
+  const $ = (id) => document.getElementById(id);
+
+  const state = {
+    manifest: null,
+    images: [],
+    index: 0,
+    lastTick: 0,
+    acc: 0,
+    framesDrawn: 0,
+    cycleCount: 0,
+    seen: new Set(),
+    prevIndex: -1,
+    ready: false,
+  };
+  let frameDataCache = [];
+
+  const statusEl = $('status');
+  const setStatus = (text, ok = false) => {
+    statusEl.textContent = text;
+    statusEl.style.color = ok ? '#39ff14' : '#ffd75e';
+  };
+
+  function loadImage(src) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error('โหลดภาพไม่ได้: ' + src));
+      img.src = src;
+    });
+  }
+
+  function updateInfo() {
+    $('frame-idx').textContent = String(state.index);
+    $('pose-name').textContent = state.manifest.poses[state.index] ?? '?';
+    $('cycle-count').textContent = String(state.cycleCount);
+  }
+
+  function advance() {
+    const prev = state.index;
+    state.index = (state.index + 1) % state.manifest.frames;
+    state.framesDrawn++;
+    state.seen.add(state.index);
+    if (prev === state.manifest.frames - 1 && state.index === 0) state.cycleCount++;
+    updateInfo();
+  }
+
+  function draw() {
+    const img = state.images[state.index];
+    if (!img) return;
+    ctx.imageSmoothingEnabled = false;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(img, 0, 0, FRAME, FRAME, 0, 0, canvas.width, canvas.height);
+  }
+
+  function tick(now) {
+    requestAnimationFrame(tick);
+    if (!state.ready) return;
+    if (state.lastTick === 0) { state.lastTick = now; return; }
+    state.acc += now - state.lastTick;
+    state.lastTick = now;
+    const stepMs = 1000 / (state.manifest.animationFps || 8);
+    while (state.acc >= stepMs) { state.acc -= stepMs; advance(); }
+    draw();
+  }
+
+  /* ---- เครื่องมือตรวจ (ใช้จาก E2E ผ่าน window.__spriteTest) ---- */
+
+  function frameData(i) {
+    if (!frameDataCache[i]) {
+      const c = document.createElement('canvas');
+      c.width = c.height = FRAME;
+      const cx = c.getContext('2d', { willReadFrequently: true });
+      cx.imageSmoothingEnabled = false;
+      cx.clearRect(0, 0, FRAME, FRAME);
+      cx.drawImage(state.images[i], 0, 0, FRAME, FRAME);
+      frameDataCache[i] = cx.getImageData(0, 0, FRAME, FRAME).data;
+    }
+    return frameDataCache[i];
+  }
+
+  // เปรียบเทียบ b = สะท้อนแนวนอนของ a (x' = FRAME-1-x) — ระดับพิกเซล
+  function compareMirror(a, b) {
+    let diff = 0, max = 0;
+    for (let y = 0; y < FRAME; y++) {
+      for (let x = 0; x < FRAME; x++) {
+        const ia = (y * FRAME + x) * 4;
+        const ib = (y * FRAME + (FRAME - 1 - x)) * 4;
+        for (let k = 0; k < 4; k++) {
+          const d = Math.abs(a[ia + k] - b[ib + k]);
+          if (d > max) max = d;
+          if (d !== 0) diff++;
+        }
+      }
+    }
+    return { diff, max };
+  }
+
+  // เปรียบเทียบตรงตำแหน่งเดียวกัน (หาท่าซ้ำ)
+  function compare(a, b) {
+    let diff = 0, max = 0;
+    for (let p = 0; p < a.length; p += 4) {
+      for (let k = 0; k < 4; k++) {
+        const d = Math.abs(a[p + k] - b[p + k]);
+        if (d > max) max = d;
+        if (d !== 0) diff++;
+      }
+    }
+    return { diff, max };
+  }
+
+  function verifyManifest() {
+    const m = state.manifest;
+    const errors = [];
+    const poses8 = ['contact', 'down', 'passing', 'up', 'contact-R', 'down-R', 'passing-R', 'up-R'];
+    if (!m) return { pass: false, errors: ['manifest ยังไม่โหลด'] };
+    if (m.frames !== 8) errors.push('frames=' + m.frames + ' (คาด 8)');
+    if (m.frameFiles.length !== 8) errors.push('frameFiles.length=' + m.frameFiles.length);
+    if (!m.poseMap || Object.keys(m.poseMap).length !== 8) errors.push('poseMap มี ' + (m.poseMap ? Object.keys(m.poseMap).length : 0) + ' คีย์ (คาด 8)');
+    for (const p of poses8) if (!m.poseMap || !m.poseMap[p]) errors.push('poseMap ขาดท่า: ' + p);
+    if (m.animationFps <= 0) errors.push('animationFps=' + m.animationFps);
+    return { pass: errors.length === 0, errors, frames: m.frames, fps: m.animationFps };
+  }
+
+  function verifyMirror() {
+    const pairs = [];
+    for (let i = 0; i < 4; i++) {
+      const r = compareMirror(frameData(i), frameData(i + 4));
+      pairs.push({
+        pair: state.manifest.poses[i] + ' ↔ ' + state.manifest.poses[i + 4],
+        diffPixels: r.diff,
+        maxDiff: r.max,
+      });
+    }
+    return {
+      pass: pairs.every((p) => p.maxDiff === 0),
+      pairs,
+      totalDiffPixels: pairs.reduce((s, p) => s + p.diffPixels, 0),
+      frameSize: FRAME,
+    };
+  }
+
+  function verifyDistinct() {
+    const n = state.images.length;
+    const identical = [];
+    let maxDiffAll = 0;
+    for (let i = 0; i < n; i++) {
+      for (let j = i + 1; j < n; j++) {
+        const r = compare(frameData(i), frameData(j));
+        if (r.max > maxDiffAll) maxDiffAll = r.max;
+        if (r.diff === 0) identical.push(state.manifest.poses[i] + ' = ' + state.manifest.poses[j]);
+      }
+    }
+    return { pass: identical.length === 0, identical, maxDiffAll, pairsChecked: (n * (n - 1)) / 2 };
+  }
+
+  function canvasHash() {
+    const d = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+    let h = 0;
+    for (let p = 0; p < d.length; p += 64) h = (h * 31 + d[p]) >>> 0;
+    return h;
+  }
+
+  /* ---- แสดงผลตรวจเบื้องต้น + expose API ---- */
+
+  async function runSelfCheck() {
+    const manifest = verifyManifest();
+    const mirror = verifyMirror();
+    const distinct = verifyDistinct();
+    $('verify-result').textContent = JSON.stringify(
+      { manifest, mirror: { pass: mirror.pass, pairs: mirror.pairs }, distinct },
+      null, 2,
+    );
+  }
+
+  window.__spriteTest = {
+    getCurrentFrame: () => state.index,
+    getPoseName: () => (state.manifest ? state.manifest.poses[state.index] : null),
+    allSeen: () => state.ready && state.seen.size >= (state.manifest ? state.manifest.frames : 8),
+    cycles: () => state.cycleCount,
+    canvasHash,
+    verifyManifest,
+    verifyMirror,
+    verifyDistinct,
+  };
+
+  (async () => {
+    try {
+      const res = await fetch(MANIFEST_URL);
+      if (!res.ok) throw new Error('manifest HTTP ' + res.status);
+      state.manifest = await res.json();
+      state.images = await Promise.all(
+        state.manifest.frameFiles.map((f) => loadImage(DIR + f)),
+      );
+      if (state.images.length !== 8 || state.manifest.frames !== 8) {
+        throw new Error('ต้องมี 8 เฟรม (ได้ ' + state.images.length + ')');
+      }
+      $('fps-label').textContent = String(state.manifest.animationFps || 8);
+      state.ready = true;
+      setStatus('พร้อม — เล่นวน 8 เฟรม (0–7) แล้ววนกลับ', true);
+      updateInfo();
+      runSelfCheck();
+      requestAnimationFrame(tick);
+    } catch (err) {
+      setStatus('⚠ เกิดข้อผิดพลาด: ' + err.message);
+      $('verify-result').textContent = String(err.stack || err);
+    }
+  })();
+})();
+</script>
+</body>
+</html>
