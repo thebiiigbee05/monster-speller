@@ -115,12 +115,13 @@
 | `make-pep512/pep4x1-sheet-test.py` | 4 | เทสสคริปต์เอง (test-of-test) |
 | Vitest + Playwright + typecheck | 5 | CI gate |
 | build-preview.mjs / generate-*.mjs | 3-5 | สร้าง sprite/พื้นหลัง/พรีวิว |
+| **pipeline.mjs** ⭐ | 4 | **1 คำสั่ง: ตรวจ+ตัด 4 sheet parallel → ตารางสรุป → หยุดถ้ามี fail** |
 | Kanban (GitHub Projects, บท 9) | ทุกระยะ | WIP limits + การ์ด |
 
 ### 🔜 ควรสร้างถัดไป (ช่องว่าง — เรียงตามมูลค่า)
 | เครื่องมือ | ปัญหาที่แก้ | มูลค่า |
 |---|---|---|
-| `pipeline.mjs` — orchestrator 1 คำสั่ง: รันตรวจทั้ง 4 sheet → ตารางสรุป → หยุดถ้ามี fail | ตรวจ 4 มอนสเตอร์ทีละตัวซ้ำ ๆ | สูง (ประหยัด 10 นาที/รอบ) |
+| ~~`pipeline.mjs`~~ ✅ สร้างแล้ว | — | — |
 | `asset-manifest-validator` — ตรวจ manifest ที่เกมโหลด ตรง schema/ไฟล์จริง | เกมโหลดพังจาก manifest ผิด | สูง |
 | CI (GitHub Actions): push → typecheck+unit+e2e+check-links อัตโนมัติ | กันของพังขึ้น main | กลาง |
 | `qa-dashboard.html` — รวมผลตรวจสินทรัพย์ทั้งหมดในหน้าเดียว | ภาพรวม QA กระจัดกระจาย | กลาง |

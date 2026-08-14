@@ -1,16 +1,15 @@
 {
-  "asset": "walker",
-  "source": "walker-sheet.png",
+  "asset": "runner",
+  "source": "runner-sheet.png",
   "frameSize": 128,
-  "frames": 5,
-  "rows": 1,
-  "cols": 5,
+  "frames": 4,
+  "rows": 2,
+  "cols": 2,
   "frameFiles": [
-    "walker_00.png",
-    "walker_01.png",
-    "walker_02.png",
-    "walker_03.png",
-    "walker_04.png"
+    "runner_00.png",
+    "runner_01.png",
+    "runner_02.png",
+    "runner_03.png"
   ],
   "animationFps": 8,
   "loop": true,

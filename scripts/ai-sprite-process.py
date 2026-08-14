@@ -331,11 +331,17 @@ def drop_flat_frames(img, frames, ratio=0.5):
         heights.append((bbox[3] - bbox[1]) if bbox else 0)
     if not heights:
         return frames, []
-    median = sorted(heights)[len(heights) // 2]
+    # ใช้ median ของ "ครึ่งบน" (upper median) แทน median ทั้งหมด —
+    # ถ้าภาพมีเศษ/เงาเล็กจำนวนมาก (เช่น เงา 8px × 14 ตัว) median ธรรมดาจะถูก
+    # ดึงลงต่ำ → เศษผ่านเกณฑ์ไปหมด. ค่าที่สูงกว่าครึ่งบนคือ "ตัวจริง" จึงทนเศษได้
+    s = sorted(heights)
+    median_all = s[len(s) // 2]
+    upper = [v for v in s if v > median_all]
+    ref = upper[len(upper) // 2] if upper else median_all
     kept, dropped = [], []
     for i, (box, h) in enumerate(zip(frames, heights)):
-        if median > 0 and h < median * ratio:
-            dropped.append((i, h, median))
+        if ref > 0 and h < ref * ratio:
+            dropped.append((i, h, ref))
         else:
             kept.append(box)
     return kept, dropped

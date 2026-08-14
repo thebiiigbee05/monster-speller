@@ -1,5 +1,16 @@
 # 🎞️ ai-sprite-process.py — เปลี่ยน Sprite Sheet จาก AI → เฟรมโปร่งใส + manifest
 
+## 🚀 ใช้กับสินทรัพย์ทั้งหมดในครั้งเดียว (แนะนำ — `pipeline.mjs`)
+
+```bash
+node scripts/pipeline.mjs            # 4 มอนสเตอร์ parallel + ตารางสรุป
+node scripts/pipeline.mjs walker     # เฉพาะตัว (walker/runner/tank/boss)
+```
+
+รัน `--require-check --drop-flat --dedupe` กับทุก sheet ใน `public/assets/ai/`
+พร้อมกัน → ตารางสรุป pass/fail · **exit 1 ถ้ามี fail ตัวใดตัวหนึ่ง** (กันของเสีย
+เข้าสู่ระยะ INTEGRATE — ดู `design/pipeline-process.md` ระยะ 4)
+
 > ปัญหา: ภาพที่ AI สร้าง **ไม่ใช่พื้นหลังโปร่งใส** (พื้นขาว/ดำ/ไล่เฉด/มีเงา)
 > → JavaScript (Canvas) วาดทับไม่ได้ ต้องประมวลผลก่อน
 >

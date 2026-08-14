@@ -1,16 +1,14 @@
 {
-  "asset": "walker",
-  "source": "walker-sheet.png",
+  "asset": "boss",
+  "source": "boss-sheet.png",
   "frameSize": 128,
-  "frames": 5,
+  "frames": 3,
   "rows": 1,
-  "cols": 5,
+  "cols": 3,
   "frameFiles": [
-    "walker_00.png",
-    "walker_01.png",
-    "walker_02.png",
-    "walker_03.png",
-    "walker_04.png"
+    "boss_00.png",
+    "boss_01.png",
+    "boss_02.png"
   ],
   "animationFps": 8,
   "loop": true,
