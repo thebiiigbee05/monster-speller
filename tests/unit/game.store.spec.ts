@@ -1,7 +1,7 @@
 import { describe, expect, it, beforeEach } from 'vitest';
 import { createPinia, setActivePinia } from 'pinia';
 import { useGameStore } from '../../src/stores/game';
-import { ROUND_SECONDS } from '../../src/data/types';
+import { ROUND_SECONDS } from '../../src/game/types';
 
 describe('game store (docs/10-chapter-10-testing-qa.md ข้อ 10.2)', () => {
   beforeEach(() => {

@@ -1,6 +1,5 @@
 import { defineStore } from 'pinia';
-
-export type Speed = 'slow' | 'normal' | 'fast';
+import type { Speed } from '../game/types';
 
 interface SettingsState {
   bgm: boolean;

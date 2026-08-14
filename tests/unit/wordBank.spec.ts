@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { getWordBank, pickWord } from '../../src/data/wordBank';
-import { MATRA_ORDER } from '../../src/data/types';
+import { getWordBank, pickWord } from '../../src/content/words/wordBank';
+import { MATRA_ORDER } from '../../src/game/types';
 
 describe('wordBank.json (docs/03-chapter-3 ข้อ 3.4 — ธนาคารคำ 8 มาตรา)', () => {
   const words = getWordBank();

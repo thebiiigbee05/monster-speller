@@ -1,12 +1,19 @@
 <script setup lang="ts">
+import { computed } from 'vue';
+import { useHallOfFameStore } from '../../../stores/hallOfFame';
+
 defineEmits<{ close: [] }>();
 
-// ตัวอย่างข้อมูล — จะเชื่อมกับ useHallOfFameStore (LocalStorage) ในขั้นพัฒนา (US-07)
-const placeholder = Array.from({ length: 10 }, (_, i) => ({
-  rank: i + 1,
-  name: '—',
-  score: 0,
-}));
+const hof = useHallOfFameStore();
+
+/** แสดง 10 แถวเสมอ — ถ้ายังมีคะแนนไม่ครบ pad ด้วยแถวว่าง (—) */
+const rows = computed(() => {
+  const rows = hof.entries.map((e, i) => ({ rank: i + 1, name: e.name, score: e.score }));
+  while (rows.length < 10) {
+    rows.push({ rank: rows.length + 1, name: '—', score: 0 });
+  }
+  return rows;
+});
 </script>
 
 <template>
@@ -18,10 +25,10 @@ const placeholder = Array.from({ length: 10 }, (_, i) => ({
           <tr><th>อันดับ</th><th>ชื่อ</th><th>คะแนน</th></tr>
         </thead>
         <tbody>
-          <tr v-for="row in placeholder" :key="row.rank">
+          <tr v-for="row in rows" :key="row.rank">
             <td>{{ row.rank }}</td>
             <td>{{ row.name }}</td>
-            <td>{{ row.score }}</td>
+            <td>{{ row.score || '—' }}</td>
           </tr>
         </tbody>
       </table>

@@ -53,6 +53,22 @@ test('เปิด Modal Settings และปรับเสียง/ควา
   await expect(page.getByTestId('settings-modal')).not.toBeVisible();
 });
 
+test('เลือกด่านใน Hub แล้วเริ่มเกม — HUD แสดงด่านที่เลือก', async ({ page }) => {
+  await page.goto('/');
+
+  // เลือกด่าน 3
+  await page.getByTestId('level-3').click();
+  await expect(page.getByTestId('start-button')).toContainText('วงแหวน กด');
+  await page.getByTestId('start-button').click();
+  await expect(page.getByTestId('game-screen')).toBeVisible();
+  await expect(page.getByTestId('hud-level')).toContainText('3');
+
+  // กลับแล้วเลือกด่าน 8 (บอส)
+  await page.getByTestId('back-button').click();
+  await page.getByTestId('level-8').click();
+  await expect(page.getByTestId('start-button')).toContainText('ป้อมจอมมาร');
+});
+
 test('เปิด Modal หอเกียรติยศ (Hall of Fame 10 อันดับ)', async ({ page }) => {
   await page.goto('/');
   await page.getByTestId('hall-of-fame-button').click();

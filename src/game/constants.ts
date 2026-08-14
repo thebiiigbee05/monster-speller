@@ -1,4 +1,4 @@
-import type { Matra } from '../data/types';
+import type { Matra } from './types';
 
 /** ขนาดฉากภายใน (Canvas ถูก scale ตามจอ) */
 export const CANVAS_W = 960;

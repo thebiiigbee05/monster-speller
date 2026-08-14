@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { test, expect, type Page } from '@playwright/test';
 
-const bank = JSON.parse(readFileSync('src/data/wordBank.json', 'utf-8')) as {
+const bank = JSON.parse(readFileSync('src/content/words/wordBank.json', 'utf-8')) as {
   words: Record<string, unknown>[];
 };
 

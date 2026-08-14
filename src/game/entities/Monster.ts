@@ -1,5 +1,5 @@
-import type { Matra, WordEntry } from '../data/types';
-import { EXPLODE_SECONDS, FRIENDLY_SECONDS, STUN_SECONDS } from './constants';
+import type { Matra, WordEntry } from '../types';
+import { EXPLODE_SECONDS, FRIENDLY_SECONDS, STUN_SECONDS } from '../constants';
 
 export type MonsterState = 'walking' | 'stunned' | 'exploding' | 'friendly' | 'escaped';
 

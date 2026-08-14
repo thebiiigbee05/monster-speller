@@ -1,4 +1,4 @@
-import type { Monster } from './Monster';
+import type { Monster } from '../entities/Monster';
 
 interface FrameRect {
   x: number;

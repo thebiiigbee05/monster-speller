@@ -1,7 +1,19 @@
-import { Monster, WalkerMonster, RunnerMonster, TankMonster } from './Monster';
-import { SpriteRenderer } from './SpriteRenderer';
-import { ParticleSystem, FloatingTexts } from './Effects';
-import { pickWord } from '../data/wordBank';
+/**
+ * ระบบเกมหลักบน Canvas (game/engine — ออร์เคสเตรเตอร์)
+ * docs/14-architecture-medium-game.md: GameEngine ต่อสายระบบ ไม่ใช่หมีพูห์
+ * - core/GameLoop          → เรียก update/render ทุกเฟรม
+ * - engine/WaveManager     → คลื่นมอนสเตอร์ตามด่าน
+ * - systems/Hints          → คำใบ้ 4 ระดับ
+ * - systems/Difficulty     → ความเร็วสัมฤทธิ์ (Settings × ด่าน)
+ */
+import { GameLoop } from '../../core/GameLoop';
+import { WaveManager } from './WaveManager';
+import { ParticleSystem, FloatingTexts } from '../render/Effects';
+import { SpriteRenderer } from '../render/SpriteRenderer';
+import { buildHint } from '../systems/Hints';
+import { effectiveSpeed } from '../systems/Difficulty';
+import { pickWord } from '../../content/words/wordBank';
+import { getLevel, type LevelConfig } from '../../content/levels';
 import {
   BASE_X,
   BULLET_SPEED,
@@ -12,14 +24,15 @@ import {
   MONSTER_H,
   MONSTER_W,
   SHIP,
-  STD_FINAL,
-} from './constants';
-import type { Matra, WordEntry } from '../data/types';
+} from '../constants';
+import { WalkerMonster } from '../entities/Monster';
+import type { Monster } from '../entities/Monster';
+import type { Matra, WordEntry } from '../types';
 
 interface Bullet {
   x: number;
   y: number;
-  px: number; // ตำแหน่งก่อนหน้า (วาดหางกระสุน)
+  px: number;
   py: number;
   vx: number;
   vy: number;
@@ -34,11 +47,6 @@ export interface EngineEvents {
   onEscape(): void;
 }
 
-/**
- * ระบบเกมหลักบน Canvas (docs/04-chapter-4-game-design.md ข้อ 4.5 Core Loop)
- * - มอนสเตอร์เดินจากขวา → ซ้าย ถือบัตรคำ
- * - ผู้เล่นคลิกยิงกระสุนมาตรา → ถูก = ระเบิด/เป็นมิตร + คะแนน, ผิด = ชะงัก + คำใบ้
- */
 export class GameEngine {
   readonly width = CANVAS_W;
   readonly height = CANVAS_H;
@@ -48,18 +56,18 @@ export class GameEngine {
   private ctx: CanvasRenderingContext2D;
   private events: EngineEvents;
   private sprite: SpriteRenderer | null = null;
+  private loop: GameLoop;
 
-  private raf = 0;
-  private last = 0;
-  private running = false;
   private elapsed = 0;
   private spawnTimer = 1;
   private combo = 0;
   private selectedMatra: Matra = 'กก';
-  private speedMultiplier = 1;
+  private settingsMult = 1;
   private gentleMode = false;
+  private level: LevelConfig = getLevel(1);
   private pointer = { x: SHIP.x, y: SHIP.y - 120 };
 
+  private wave: WaveManager;
   private particles = new ParticleSystem();
   private texts = new FloatingTexts();
   private shake = 0;
@@ -69,16 +77,6 @@ export class GameEngine {
   private readonly starsFar = this.makeStars(55, 1, 7);
   private readonly starsNear = this.makeStars(20, 2.1, 16);
 
-  private makeStars(count: number, size: number, speed: number) {
-    return Array.from({ length: count }, () => ({
-      x: Math.random() * CANVAS_W,
-      y: Math.random() * CANVAS_H,
-      r: Math.random() * size * 0.7 + size * 0.3,
-      s: speed * (0.6 + Math.random() * 0.8),
-      tw: Math.random() * Math.PI * 2,
-    }));
-  }
-
   constructor(canvas: HTMLCanvasElement, events: EngineEvents) {
     canvas.width = this.width;
     canvas.height = this.height;
@@ -86,33 +84,50 @@ export class GameEngine {
     if (!ctx) throw new Error('ไม่สามารถสร้าง 2D context ได้');
     this.ctx = ctx;
     this.events = events;
+    this.wave = new WaveManager(this.waveConfigFromLevel(this.level));
+    this.loop = new GameLoop((dt) => {
+      this.update(dt);
+      this.render();
+    });
+  }
+
+  /** แปลง LevelConfig → WaveConfig (สัดส่วน/คาบ/จำนวน) */
+  private waveConfigFromLevel(level: LevelConfig) {
+    return {
+      spawnBase: level.spawnBase,
+      spawnMin: level.spawnMin,
+      maxMonsters: level.maxMonsters,
+      irregularRatio: level.irregularRatio,
+    };
   }
 
   async start(): Promise<void> {
     if (!this.sprite) {
       this.sprite = await SpriteRenderer.load();
     }
-    if (this.running) return;
-    this.running = true;
-    this.last = performance.now();
-    this.raf = requestAnimationFrame(this.loop);
+    this.loop.start();
   }
 
   stop(): void {
-    this.running = false;
-    cancelAnimationFrame(this.raf);
+    this.loop.stop();
   }
 
   setBullet(matra: Matra): void {
     this.selectedMatra = matra;
   }
 
-  /** ความเร็วโดยรวมของมอนสเตอร์ (settings.speed — docs/06-chapter-6 ข้อ 6.3) */
-  setSpeedMultiplier(mult: number): void {
-    this.speedMultiplier = mult;
+  /** เปลี่ยนด่าน (content/levels) — ความเร็ว/คาบ/สัดส่วนตามด่าน */
+  setLevel(level: LevelConfig): void {
+    this.level = level;
+    this.wave.setConfig(this.waveConfigFromLevel(level));
   }
 
-  /** โหมดผ่อนปรน: ผิดทันทีให้คำใบ้เต็ม (docs/04-chapter-4-game-design.md ข้อ 4.7) */
+  /** ความเร็วจาก Modal Settings (docs/06-chapter-6 ข้อ 6.3) */
+  setSpeedMultiplier(mult: number): void {
+    this.settingsMult = mult;
+  }
+
+  /** โหมดผ่อนปรน: ผิดทันทีให้คำใบ้เต็ม */
   setGentleMode(on: boolean): void {
     this.gentleMode = on;
   }
@@ -140,18 +155,10 @@ export class GameEngine {
   }
 
   private canvasRect(): DOMRect | null {
-    const canvas = this.ctx.canvas;
-    return canvas.getBoundingClientRect();
+    return this.ctx.canvas.getBoundingClientRect();
   }
 
-  private loop = (t: number): void => {
-    if (!this.running) return;
-    const dt = Math.min((t - this.last) / 1000, 0.05);
-    this.last = t;
-    this.update(dt);
-    this.render();
-    this.raf = requestAnimationFrame(this.loop);
-  };
+  // ---------------------------------------------------------------- update
 
   private update(dt: number): void {
     this.elapsed += dt;
@@ -163,17 +170,17 @@ export class GameEngine {
     this.shake = Math.max(0, this.shake - dt * 2.2);
     this.muzzleFlash = Math.max(0, this.muzzleFlash - dt * 9);
 
-    // คลื่นมอนสเตอร์ — ถี่ขึ้นตามเวลา (docs/04-chapter-4-game-design.md ข้อ 4.9)
+    // คลื่นมอนสเตอร์ (WaveManager — คาบตามด่านและเวลาในรอบ)
     this.spawnTimer -= dt;
-    if (this.spawnTimer <= 0 && this.monsters.length < 5) {
+    if (this.wave.shouldSpawn(dt, this.spawnTimer, this.monsters.length)) {
       this.spawnMonster();
-      this.spawnTimer = Math.max(0.9, 2.5 - this.elapsed * 0.01);
+      this.spawnTimer = this.wave.nextTimer(this.elapsed);
     }
 
-    // อัปเดตมอนสเตอร์ — state machine อยู่ใน Monster.update เอง (locality)
-    // เหลือแค่เช็ค "เดินถึงฐาน" ซึ่งต้องรู้จักฉาก (GameEngine เป็นเจ้าของ)
+    // อัปเดตมอนสเตอร์ — state machine อยู่ใน Monster.update (locality)
+    const speed = effectiveSpeed(this.settingsMult, this.level.speedMult);
     for (const m of this.monsters) {
-      m.update(dt, this.speedMultiplier);
+      m.update(dt, speed);
       if (m.state === 'walking' && m.x < BASE_X) {
         m.state = 'escaped';
         this.events.onEscape();
@@ -203,7 +210,6 @@ export class GameEngine {
         const res = target.hit(b.matra);
         if (res.correct) {
           this.combo += 1;
-          // ระเบิดสีเขียว + สีประจำมาตรา + ตัวเลขคะแนนลอย
           this.particles.burst(target.x, target.y, '#39ff14', 26, 250, 3.5, 0.7);
           this.particles.burst(target.x, target.y, MATRA_COLORS[target.word.matra], 16, 180, 3, 0.6);
           this.texts.add(`+${target.points}`, target.x, target.y - 34, '#ffd700', 24);
@@ -211,12 +217,11 @@ export class GameEngine {
           this.events.onCorrect(target.points, this.combo);
         } else {
           this.combo = 0;
-          // ประกายแดง + ข้อความ "ผิด!" + จอสั่น
           this.particles.burst(target.x, target.y, '#ff3b3b', 18, 200, 3, 0.55);
           this.texts.add('ผิด!', target.x, target.y - 34, '#ff3b3b', 22);
           this.shake = Math.min(this.shake + 0.7, 1.1);
           this.events.onWrong();
-          this.events.onHint(this.hintText(target));
+          this.events.onHint(buildHint(target, this.gentleMode));
         }
         break;
       }
@@ -229,29 +234,8 @@ export class GameEngine {
 
   private spawnMonster(): void {
     const exclude = new Set(this.monsters.map((m) => m.word.word));
-    const word = pickWord(exclude);
-    const roll = Math.random();
-    const ctor = roll < 0.5 ? WalkerMonster : roll < 0.8 ? RunnerMonster : TankMonster;
-    const x = this.width + 40;
-    const y = 120 + Math.random() * 240;
-    this.monsters.push(new ctor(word, x, y));
-  }
-
-  private hintText(m: Monster): string {
-    if (this.gentleMode && m.hintLevel >= 1) {
-      return `เฉลย: มาตรา ${m.word.matra} (ตัวสะกด "${m.word.finalConsonant}")`;
-    }
-    if (m.hintLevel >= 3) {
-      return `เฉลย: มาตรา ${m.word.matra} (ตัวสะกด "${m.word.finalConsonant}")`;
-    }
-    if (m.word.matra === 'กา') {
-      return 'คำนี้ไม่มีตัวสะกด (มาตรา กา)';
-    }
-    const std = STD_FINAL[m.word.matra];
-    if (m.hintLevel >= 2 && !m.word.regular) {
-      return `ตัวสะกด "${m.word.finalConsonant}" ออกเสียงเหมือน ${std} → มาตรา ${m.word.matra}`;
-    }
-    return `คำนี้ออกเสียงเหมือน ${std} สะกด`;
+    const word = pickWord(exclude, this.level.irregularRatio);
+    this.monsters.push(this.wave.buildMonster(word, this.width, this.height));
   }
 
   private fire(): void {
@@ -270,6 +254,16 @@ export class GameEngine {
       matra: this.selectedMatra,
       hit: false,
     });
+  }
+
+  private makeStars(count: number, size: number, speed: number) {
+    return Array.from({ length: count }, () => ({
+      x: Math.random() * CANVAS_W,
+      y: Math.random() * CANVAS_H,
+      r: Math.random() * size * 0.7 + size * 0.3,
+      s: speed * (0.6 + Math.random() * 0.8),
+      tw: Math.random() * Math.PI * 2,
+    }));
   }
 
   private updateStars(dt: number): void {

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { WalkerMonster, RunnerMonster, TankMonster } from '../../src/game/Monster';
+import { WalkerMonster, RunnerMonster, TankMonster } from '../../src/game/entities/Monster';
 import { STUN_SECONDS, EXPLODE_SECONDS, FRIENDLY_SECONDS } from '../../src/game/constants';
-import type { WordEntry } from '../../src/data/types';
+import type { WordEntry } from '../../src/game/types';
 
 // คำตัวอย่าง (ตรวจจาก wordBank แล้ว): "รัก" = แม่กก ตรงมาตรา, "กบ" = แม่กบ ตรงมาตรา
 const WORD_KK: WordEntry = {

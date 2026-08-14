@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useGameStore } from './stores/game';
-import HubScreen from './screens/HubScreen.vue';
-import GameScreen from './screens/GameScreen.vue';
+import HubScreen from './ui/screens/HubScreen.vue';
+import GameScreen from './ui/screens/GameScreen.vue';
 
 const game = useGameStore();
 </script>

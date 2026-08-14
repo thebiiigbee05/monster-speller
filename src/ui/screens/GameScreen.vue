@@ -1,23 +1,26 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
-import { useGameStore } from '../stores/game';
-import { useSettingsStore, type Speed } from '../stores/settings';
-import { MATRA_ORDER } from '../data/types';
-import { MATRA_COLORS } from '../game/constants';
-import { GameEngine } from '../game/GameEngine';
+import { useGameStore } from '../../stores/game';
+import { useSettingsStore } from '../../stores/settings';
+import { useHallOfFameStore } from '../../stores/hallOfFame';
+import { MATRA_ORDER } from '../../game/types';
+import { MATRA_COLORS } from '../../game/constants';
+import { SETTINGS_SPEED } from '../../game/systems/Difficulty';
+import { GameEngine } from '../../game/engine/GameEngine';
 
 const game = useGameStore();
 const settings = useSettingsStore();
+const hof = useHallOfFameStore();
 
 const canvasRef = ref<HTMLCanvasElement | null>(null);
 const hintText = ref('');
+const playerName = ref('');
+const savedRank = ref<number | null>(null);
+const saveError = ref('');
 
 let engine: GameEngine | null = null;
 let timer: ReturnType<typeof setInterval> | undefined;
 
-const SPEED_MULT: Record<Speed, number> = { slow: 0.7, normal: 1, fast: 1.4 };
-
-// ตัวนับเวลารอบ 1 วินาที (docs/04-chapter-4-game-design.md — รอบ 3 นาที)
 onMounted(() => {
   if (!canvasRef.value) return;
   engine = new GameEngine(canvasRef.value, {
@@ -35,11 +38,11 @@ onMounted(() => {
       game.registerEscape();
     },
   });
-  engine.setSpeedMultiplier(SPEED_MULT[settings.speed]);
+  engine.setLevel(game.levelConfig);
+  engine.setSpeedMultiplier(SETTINGS_SPEED[settings.speed]);
   engine.setGentleMode(settings.gentleMode);
   void engine.start();
 
-  // เปิดให้เทส E2E เข้าถึงได้ (dev เท่านั้น)
   if (import.meta.env.DEV) {
     (window as unknown as Record<string, unknown>).__monsterSpellerEngine = engine;
   }
@@ -55,18 +58,22 @@ onBeforeUnmount(() => {
   window.removeEventListener('keydown', onKey);
 });
 
-// เปลี่ยนความเร็ว/โหมดผ่อนปรนตอนกำลังเล่น (Modal Settings เปิดค้างได้)
+// ซิงค์การตั้งค่า/ด่านกับ engine
 watch(
   () => settings.speed,
-  (s) => engine?.setSpeedMultiplier(SPEED_MULT[s]),
+  (s) => engine?.setSpeedMultiplier(SETTINGS_SPEED[s]),
 );
 watch(
   () => settings.gentleMode,
   (v) => engine?.setGentleMode(v),
 );
+watch(
+  () => game.level,
+  () => {
+    if (engine) engine.setLevel(game.levelConfig);
+  },
+);
 
-// แป้น 1–8 เลือกกระสุน — ใช้ event.code กันปัญหา IME ภาษาไทย (docs/07-chapter-7 ข้อ 7.7)
-// Space = ยิงไปยังจุดเล็งสุดท้าย
 function onKey(e: KeyboardEvent) {
   const code = e.code;
   if (code.startsWith('Digit')) {
@@ -81,7 +88,6 @@ function onKey(e: KeyboardEvent) {
   }
 }
 
-// คลิก/แตะบนฉาก = ยิง (docs/04-chapter-4-game-design.md ข้อ 4.6)
 function onCanvasClick(e: MouseEvent) {
   if (game.status !== 'playing') return;
   engine?.handlePointer(e.clientX, e.clientY);
@@ -92,13 +98,30 @@ function selectBullet(m: (typeof MATRA_ORDER)[number]) {
   engine?.setBullet(m);
 }
 
-// จบรอบโดย HP=0 ผ่าน store แล้ว — ดูเวลาด้วย watcher กันกรณี timeLeft ข้าม 0
 watch(
   () => game.timeLeft,
   (t) => {
     if (t === 0 && game.status === 'playing') game.endRound();
   },
 );
+
+/** บันทึกคะแนนลง Hall of Fame (ผ่าน store + services/storage) */
+function saveScore() {
+  const name = playerName.value.trim();
+  if (!name) {
+    saveError.value = 'กรอกชื่อก่อนบันทึกครับ';
+    return;
+  }
+  const rank = hof.addEntry({
+    name,
+    score: game.score,
+    correctHits: game.correctHits,
+    wrongHits: game.wrongHits,
+    level: game.level,
+  });
+  savedRank.value = rank;
+  saveError.value = '';
+}
 </script>
 
 <template>
@@ -107,6 +130,7 @@ watch(
       <span data-testid="hud-timer" class="hud-item">⏱ {{ game.timeText }}</span>
       <span data-testid="hud-score" class="hud-item">🏆 {{ game.score }}</span>
       <span data-testid="hud-hp" class="hud-item">❤️ {{ game.hp }}</span>
+      <span data-testid="hud-level" class="hud-item">🎯 ด่าน {{ game.level }}</span>
       <span v-if="game.combo > 1" class="hud-item combo">🔥 คอมโบ ×{{ game.combo }}</span>
       <span data-testid="selected-bullet" class="hud-item selected">กระสุน: {{ game.selectedMatra }}</span>
       <button data-testid="back-button" class="btn btn-small" @click="game.backToHub()">← ออก</button>
@@ -168,9 +192,27 @@ watch(
             <span class="stat-label">หนีถึงฐาน</span>
           </div>
         </div>
-        <p v-if="game.score >= 5000" class="verdict">🏅 ยอดเยี่ยม! พิทักษ์โลกได้อย่างสมบูรณ์</p>
-        <p v-else-if="game.score >= 2500" class="verdict">👍 เก่งมาก ฝึกอีกนิดก็สมบูรณ์แบบ</p>
-        <p v-else class="verdict">💪 สู้ต่อ! เปิดบทเรียนมาตราแล้วกลับมาใหม่</p>
+        <p class="verdict">{{ game.verdict }}</p>
+
+        <!-- บันทึก Hall of Fame -->
+        <div v-if="savedRank" class="hof-saved" data-testid="hof-saved">
+          🎉 บันทึกสำเร็จ — อันดับที่ <strong>{{ savedRank }}</strong>!
+        </div>
+        <div v-else class="hof-save">
+          <input
+            v-model="playerName"
+            data-testid="hof-name-input"
+            class="name-input"
+            placeholder="ชื่อผู้เล่น (เช่น ดาวน้อย)"
+            maxlength="20"
+            @keyup.enter="saveScore"
+          />
+          <button data-testid="hof-save-button" class="btn btn-small" @click="saveScore">
+            บันทึกคะแนน
+          </button>
+        </div>
+        <p v-if="saveError" class="save-error" data-testid="hof-error">{{ saveError }}</p>
+
         <div class="summary-actions">
           <button data-testid="back-to-hub" class="btn" @click="game.backToHub()">กลับหน้าหลัก</button>
           <button data-testid="replay-round" class="btn btn-primary" @click="game.startRound()">เล่นอีกครั้ง</button>

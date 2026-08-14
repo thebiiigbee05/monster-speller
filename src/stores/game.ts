@@ -1,5 +1,7 @@
 import { defineStore } from 'pinia';
-import { ROUND_SECONDS, type Matra } from '../data/types';
+import { ROUND_SECONDS, type Matra } from '../game/types';
+import { scoreForHit, verdictForScore } from '../game/systems/Scoring';
+import { getLevel } from '../content/levels';
 
 export type GameStatus = 'hub' | 'playing' | 'roundEnd';
 
@@ -9,7 +11,7 @@ interface GameState {
   hp: number;
   timeLeft: number;
   selectedMatra: Matra;
-  round: number;
+  level: number;
   combo: number;
   bestCombo: number;
   correctHits: number;
@@ -24,7 +26,7 @@ export const useGameStore = defineStore('game', {
     hp: 3,
     timeLeft: ROUND_SECONDS,
     selectedMatra: 'กก',
-    round: 1,
+    level: 1,
     combo: 0,
     bestCombo: 0,
     correctHits: 0,
@@ -39,13 +41,20 @@ export const useGameStore = defineStore('game', {
       const s = state.timeLeft % 60;
       return `${m}:${String(s).padStart(2, '0')}`;
     },
-    /** คะแนนโบนัสคอมโบ: ยิงติดต่อกันมากขึ้น ยิ่งได้โบนัส (docs/04-chapter-4-game-design.md ข้อ 4.8) */
-    comboBonus(state): number {
-      return Math.min(state.combo, 10) * 10;
+    /** config ของด่านปัจจุบัน (content/levels) */
+    levelConfig(state) {
+      return getLevel(state.level);
+    },
+    /** ข้อความตัดสินตามคะแนน (game/systems/Scoring) */
+    verdict(state): string {
+      return verdictForScore(state.score);
     },
   },
 
   actions: {
+    selectLevel(level: number) {
+      this.level = level;
+    },
     startRound() {
       this.status = 'playing';
       this.score = 0;
@@ -61,9 +70,9 @@ export const useGameStore = defineStore('game', {
     selectBullet(matra: Matra) {
       this.selectedMatra = matra;
     },
-    /** ยิงถูก — บวกคะแนน + อัปเดตคอมโบ (points จาก Monster + โบนัสคอมโบ) */
+    /** ยิงถูก — คะแนน = แต้มมอนสเตอร์ + โบนัสคอมโบ (ระบบ Scoring) */
     addScore(points: number, combo: number) {
-      this.score += points + Math.min(combo, 10) * 10;
+      this.score += scoreForHit(points, combo);
       this.combo = combo;
       this.bestCombo = Math.max(this.bestCombo, combo);
       this.correctHits += 1;

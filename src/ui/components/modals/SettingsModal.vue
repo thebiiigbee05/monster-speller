@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { useSettingsStore, type Speed } from '../stores/settings';
+import { useSettingsStore } from '../../../stores/settings';
+import type { Speed } from '../../../game/types';
 
 const settings = useSettingsStore();
 defineEmits<{ close: [] }>();
