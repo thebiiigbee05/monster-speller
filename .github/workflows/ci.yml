@@ -1,0 +1,57 @@
+# CI — ตรวจโค้ด+สินทรัพย์ทุก push/PR (กันของพังขึ้น main)
+# ตาม design/pipeline-process.md ระยะ 5 (INTEGRATE gate):
+#   typecheck → unit test → e2e (Playwright) → check-links → check-manifests
+# deploy ไป Pages แยกใน deploy.yml (เฉพาะ main)
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: ติดตั้ง dependencies
+        run: npm ci
+
+      - name: typecheck (vue-tsc)
+        run: npm run typecheck
+
+      - name: unit tests (Vitest)
+        run: npm run test:unit
+
+      - name: ติดตั้ง Playwright browser (chromium)
+        run: npx playwright install --with-deps chromium
+
+      - name: e2e tests (Playwright)
+        run: npm run test:e2e
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
+      # ---- ตรวจสินทรัพย์ (ไม่ต้องใช้ node) ----
+      - name: ตรวจลิงก์เอกสาร (check-links.py)
+        run: python3 tests/check-links.py
+
+      - name: ตรวจ sprite manifest (check-manifests.py)
+        run: python3 tests/check-manifests.py
