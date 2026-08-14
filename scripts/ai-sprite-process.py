@@ -762,6 +762,10 @@ def main():
     ap.add_argument("--pose-names", default="contact,down,passing,up",
                     help="ชื่อท่าเรียงตามลำดับกริด (คั่น ,) เช่น contact,down,passing,up — "
                          "เขียน poseMap ใน manifest + เตือนถ้าท่าไม่ครบตามสัญญา")
+    ap.add_argument("--mirror-cycle", action="store_true",
+                    help="สร้างก้าวที่ 2 ด้วยภาพสะท้อน (flip แนวนอน) → 2x เฟรม "
+                         "(8 จาก 4) ให้เดินลื่น ตัวไม่สมมาตร (เช่น รันเนอร์ — ครีบหลัง) "
+                         "ห้ามใช้")
     ap.add_argument("--check", action="store_true",
                     help="โหมดตรวจภาพอย่างเดียว: รายงานเฟรมหลอก/เงา/กริด/ติดขอบ — ไม่สร้างไฟล์")
     ap.add_argument("--require-check", action="store_true",
@@ -891,17 +895,32 @@ def main():
 
     os.makedirs(args.out_dir, exist_ok=True)
     frame_files = []
+    canvases = []
     for i, box in enumerate(frames):
         canvas = normalize_frame(img, box, args.cell)
         fname = f"{args.name}_{i:02d}.png"
         canvas.save(os.path.join(args.out_dir, fname))
         frame_files.append(fname)
+        canvases.append(canvas)
         print(f"  {fname}: กล่อง {box} → {args.cell}×{args.cell}")
+
+    # --mirror-cycle: ก้าวที่ 2 = ภาพสะท้อน (สลับขานำ) → 2x เฟรม เดินลื่น
+    # (ดู walk-cycle-spec.md ข้อ 2 — ตัวไม่สมมาตรห้ามใช้)
+    if args.mirror_cycle and canvases:
+        base = len(canvases)
+        for i, canvas in enumerate(canvases):
+            fname = f"{args.name}_{base + i:02d}.png"
+            canvas.transpose(Image.FLIP_LEFT_RIGHT).save(os.path.join(args.out_dir, fname))
+            frame_files.append(fname)
+        print(f"🪞 mirror-cycle: สร้าง {base} เฟรมสะท้อน (ก้าวที่ 2) "
+              f"→ รวม {len(frame_files)} เฟรม")
 
     # mapping ท่าทาง: เซลล์ในกริดเรียง = pose ใน --pose-names (ตามสัญญา PEP:
     # walk-cycle-spec.md — contact/down/passing/up). หลัง drop-flat/dedupe
     # ท่าที่เหลืออาจน้อยกว่าสัญญา → เตือน + เขียน poseWarning ใน manifest
     poses = [p.strip() for p in args.pose_names.split(",") if p.strip()]
+    if args.mirror_cycle:
+        poses = poses + [p + "-R" for p in poses]
     pose_map, missing_poses = {}, []
     for i, pname in enumerate(poses):
         if i < len(frame_files):
@@ -916,11 +935,14 @@ def main():
             f"ขาด: {', '.join(missing_poses)} — gen ใหม่หรือตรวจด้วยสายตา")
         print(f"⚠️  {pose_warning}")
 
+    if args.mirror_cycle:
+        cols = cols * 2  # ก้าวที่ 2 ต่อแถวแนวนอน
+
     manifest = {
         "asset": args.name,
         "source": os.path.basename(args.sheet),
         "frameSize": args.cell,
-        "frames": len(frames),
+        "frames": len(frame_files),
         "rows": rows,
         "cols": cols,
         "frameFiles": frame_files,

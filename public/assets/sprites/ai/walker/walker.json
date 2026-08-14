@@ -2,26 +2,38 @@
   "asset": "walker",
   "source": "walker-sheet.png",
   "frameSize": 128,
-  "frames": 4,
+  "frames": 8,
   "rows": 4,
-  "cols": 1,
+  "cols": 2,
   "frameFiles": [
     "walker_00.png",
     "walker_01.png",
     "walker_02.png",
-    "walker_03.png"
+    "walker_03.png",
+    "walker_04.png",
+    "walker_05.png",
+    "walker_06.png",
+    "walker_07.png"
   ],
   "poses": [
     "contact",
     "down",
     "passing",
-    "up"
+    "up",
+    "contact-R",
+    "down-R",
+    "passing-R",
+    "up-R"
   ],
   "poseMap": {
     "contact": "walker_00.png",
     "down": "walker_01.png",
     "passing": "walker_02.png",
-    "up": "walker_03.png"
+    "up": "walker_03.png",
+    "contact-R": "walker_04.png",
+    "down-R": "walker_05.png",
+    "passing-R": "walker_06.png",
+    "up-R": "walker_07.png"
   },
   "animationFps": 8,
   "loop": true,

@@ -15,9 +15,12 @@
 > 8 รอบ" → เดินกระตุก 2 เฟรม. **ตอนนี้บังคับ 4×1 = 4 เซลล์ในแถวเดียว แต่ละเซลล์
 > ต้องเป็นท่าต่างกันจริง** (`--drop-flat --dedupe` จะจับเฟรมซ้ำ/เงาให้อัตโนมัติด้วย)
 >
-> **🚶 สเปกท่าเดินอ้างอิง (มุมขา + 4-6 ท่า + กฎ): [`walk-cycle-spec.md`](walk-cycle-spec.md)
-> — เปิดดูคู่กับพรอมต์นี้ ถ้าอยากให้ AI วาดท่าต่อเนื่องตรงสเปก (คัดลอกข้อความ
-> "WALK CYCLE" ในหัวข้อ 5 ไปต่อท้ายพรอมต์ได้เลย)
+> **🚶 สเปกท่าเดินอ้างอิง (มุมขา + 8 เฟรม 2 ก้าว + กฎ): [`walk-cycle-spec.md`](walk-cycle-spec.md)
+> — เปิดดูคู่กับพรอมต์นี้ (คัดลอกข้อความ "WALK CYCLE" ในหัวข้อ 5 ไปต่อท้ายพรอมต์ได้เลย)
+>
+> **🎞️ 8 เฟรมเพื่อความลื่นไหล:** AI วาด 4 ท่าหลัก (กริด 4×1) → คำสั่งท้ายข้อ
+> มี `--mirror-cycle` (วอล์กเกอร์/แทงก์/บอส) สร้างก้าวที่ 2 ด้วยภาพสะท้อน → ได้ **8 เฟรม**
+> **รันเนอร์ห้าม mirror** (ครีบหลังไม่สมมาตร) → ใช้ 4 ท่าหรือวาด 8 ท่าจริง (ดู spec ข้อ 2)
 
 ---
 
@@ -79,7 +82,8 @@ same pose into multiple cells; repeating a pose will fail the check).
 cd monster-speller-src
 ./.venv-scripts/Scripts/python.exe scripts/ai-sprite-process.py <walker-sheet.png> \
     --name walker --cell 128 --out-dir public/assets/sprites/ai/walker \
-    --grid-bg "#00ff00" --expect-grid 4x1 --require-check --drop-flat --dedupe
+    --grid-bg "#00ff00" --expect-grid 4x1 --pose-names contact,down,passing,up \
+    --require-check --drop-flat --dedupe --mirror-cycle
 ```
 
 ---
@@ -143,8 +147,12 @@ same pose into multiple cells; repeating a pose will fail the check).
 cd monster-speller-src
 ./.venv-scripts/Scripts/python.exe scripts/ai-sprite-process.py <runner-sheet.png> \
     --name runner --cell 128 --out-dir public/assets/sprites/ai/runner \
-    --grid-bg "#00ff00" --expect-grid 4x1 --require-check --drop-flat --dedupe
+    --grid-bg "#00ff00" --expect-grid 4x1 --pose-names reach,stride,passing,kick \
+    --require-check --drop-flat --dedupe
 ```
+
+> ⚠️ **รันเนอร์ไม่ใช้ `--mirror-cycle`** — ครีบหลังไม่สมมาตร mirror แล้วจะไปอยู่ด้านหน้า
+> → ใช้ 4 ท่าจริง หรือวาด 8 ท่า (กริด 8×1 = 1024×128 ดู spec ข้อ 2)
 
 ---
 
@@ -208,7 +216,8 @@ same pose into multiple cells; repeating a pose will fail the check).
 cd monster-speller-src
 ./.venv-scripts/Scripts/python.exe scripts/ai-sprite-process.py <tank-sheet.png> \
     --name tank --cell 128 --out-dir public/assets/sprites/ai/tank \
-    --grid-bg "#00ff00" --expect-grid 4x1 --require-check --drop-flat --dedupe
+    --grid-bg "#00ff00" --expect-grid 4x1 --pose-names sway-left,squat,sway-right,rise \
+    --require-check --drop-flat --dedupe --mirror-cycle
 ```
 
 ---
@@ -272,7 +281,8 @@ same pose into multiple cells; repeating a pose will fail the check).
 cd monster-speller-src
 ./.venv-scripts/Scripts/python.exe scripts/ai-sprite-process.py <boss-sheet.png> \
     --name boss --cell 128 --out-dir public/assets/sprites/ai/boss \
-    --grid-bg "#00ff00" --expect-grid 4x1 --require-check --drop-flat --dedupe
+    --grid-bg "#00ff00" --expect-grid 4x1 --pose-names stomp-left,low,stomp-right,high \
+    --require-check --drop-flat --dedupe --mirror-cycle
 ```
 
 ---
@@ -281,10 +291,10 @@ cd monster-speller-src
 
 | ตัว | เอกลักษณ์เงา | สีหลัก | สีรอง (จุดเด่น) | `--expect-grid` | ไฟล์ manifest |
 |---|---|---|---|---|---|
-| **วอล์กเกอร์** | ตัวกลมรี + หนวด 2 ปลายทอง | `#39ff14` | ทอง `#ffd700` (หนวด) · ท้อง `#a5ffa0` | `4x1` → 4 เฟรม | `sprites/ai/walker/walker.json` |
-| **รันเนอร์** | เพรียวเอียง 15° + รองเท้าขาว | `#ff2e97` | ขาว `#ffffff` (รองเท้า) · ครีบหลัง | `4x1` → 4 เฟรม | `sprites/ai/runner/runner.json` |
-| **แทงก์** | กว้างสุด + หมุดทอง 2 บนหัว | `#a855f7` | ทอง `#ffd700` (หมุด) · ท้อง `#cfa8f5` | `4x1` → 4 เฟรม | `sprites/ai/tank/tank.json` |
-| **บอส** | ใหญ่สุด + เขาทอง 2 เขาโค้ง | `#ff3b3b` | ทอง `#ffd700` (เขา/ฟัน) · คิ้ว/ตา `#1a0508` | `4x1` → 4 เฟรม | `sprites/ai/boss/boss.json` |
+| **วอล์กเกอร์** | ตัวกลมรี + หนวด 2 ปลายทอง | `#39ff14` | ทอง `#ffd700` (หนวด) · ท้อง `#a5ffa0` | `4x1` → **8 เฟรม** (mirror) | `sprites/ai/walker/walker.json` |
+| **รันเนอร์** | เพรียวเอียง 15° + รองเท้าขาว | `#ff2e97` | ขาว `#ffffff` (รองเท้า) · ครีบหลัง | `4x1` → 4 เฟรม (ไม่ mirror) | `sprites/ai/runner/runner.json` |
+| **แทงก์** | กว้างสุด + หมุดทอง 2 บนหัว | `#a855f7` | ทอง `#ffd700` (หมุด) · ท้อง `#cfa8f5` | `4x1` → **8 เฟรม** (mirror) | `sprites/ai/tank/tank.json` |
+| **บอส** | ใหญ่สุด + เขาทอง 2 เขาโค้ง | `#ff3b3b` | ทอง `#ffd700` (เขา/ฟัน) · คิ้ว/ตา `#1a0508` | `4x1` → **8 เฟรม** (mirror) | `sprites/ai/boss/boss.json` |
 
 > **เหตุผลเลือก `#00ff00` เป็นพื้นทุกตัว:** เขียวสดจัดจ้าน ไม่มีในจานสีสกิน
 > ทั้ง 4 (เขียว `#39ff14` ต่างกันชัด) → key ลบพื้นไม่โดนเนื้อตัว (ดูบทเรียนใน
@@ -302,6 +312,7 @@ cd monster-speller-src
 4. [ ] ตัวละครไม่ติดขอบเซลล์ (มีช่องว่างรอบตัว ≥ 8px)
 5. [ ] ไม่มีเงาใต้ตัว / ไม่มีสีเขียวเข้มบนตัว / ไม่มีตัวหนังสือ / ไม่มีโลโก้
 6. [ ] เปิดเฟรม `_00.png`–`_03.png` → **ทั้ง 4 ท่าต่างกันจริง** ไม่มีเฟรมหลอก (ว่าง/ซ้ำกัน) — ใช้ `--dedupe` จับซ้ำให้ด้วย
+7. [ ] (วอล์กเกอร์/แทงก์/บอส) เปิด `_00.png`–`_07.png` → **ครบ 8 เฟรม** · ท่า 4-7 = สะท้อนของ 0-3 (สลับขานำ) — manifest `frames: 8` + `poseMap` 8 ชื่อ
 
 ## 🔧 ถ้า AI ทำไม่ตรงสัญญา (แก้ยังไง)
 
@@ -311,6 +322,8 @@ cd monster-speller-src
 | สีตัวปนพื้น (เขียวใกล้ `#00ff00`) | เปลี่ยนพื้นเป็นม่วง `#ff00ff` (magenta) แทน แล้วใช้ `--grid-bg "#ff00ff"` |
 | เฟรมไม่เท่ากัน/กริดเบี้ยว | เพิ่ม `"all cells exactly the same size, perfectly aligned"` แล้ว gen ใหม่ |
 | เฟรมซ้ำกัน (ท่าเดียวแปะ 4 เซลล์) | รันคำสั่งเดิมที่ต่อท้าย `--dedupe` ไว้แล้ว — จะเหลือท่าจริงให้ตรวจ ถ้ายังได้ < 4 ท่า → gen ใหม่ ย้ำ `"4 DISTINCT poses, NO duplicates"` |
+| อยากได้ 8 ท่าจริงจาก AI (ไม่ mirror — เช่น รันเนอร์) | ใช้กริด **8×1 = ภาพ 1024×128** (`--expect-grid 8x1`) — เซลล์ 5-8 = ก้าวที่ 2 สลับขานำ แต่หน้ายังหันขวา ดู `walk-cycle-spec.md` ข้อ 2 |
+| ตัวไม่สมมาตร (mirror แล้วของเด่นไปอีกด้าน) | อย่าใช้ `--mirror-cycle` — ใช้ 4 ท่าจริง หรือวาด 8 ท่า (กรณีรันเนอร์: ครีบหลัง) |
 | เฟรมหลอก (ว่าง/เงา) | รันคำสั่งเดิมที่ต่อท้าย `--drop-flat` — จะลบเงา/แถบว่างให้อัตโนมัติ ถ้ายังมี → ลด `--threshold` หรือ gen ใหม่ |
 | ได้ภาพ 1024px | ขอ `4x1 @ 256 = 1024x256` (ชาร์ปกว่า) — คำสั่ง Python เปลี่ยนแค่ `--cell 256` + `--expect-grid 4x1` |
 

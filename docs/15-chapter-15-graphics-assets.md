@@ -334,7 +334,9 @@ No characters/monsters/text/logo/watermark. 16:9, 960x540.
 
 > 🔗 **พรอมต์ PEP ครบ 4 มอนสเตอร์ + คำสั่ง Python พร้อมใช้:
 > [`design/art/pep-prompts-monsters.md`](../design/art/pep-prompts-monsters.md)**
-> (พื้น `#00ff00` · กริด 4×1 แถวเดียว 128px = ภาพ 512×128 · `--expect-grid 4x1 --require-check --drop-flat --dedupe`)
+> (พื้น `#00ff00` · กริด 4×1 แถวเดียว 128px = ภาพ 512×128 · `--expect-grid 4x1 --pose-names … \
+> --require-check --drop-flat --dedupe [--mirror-cycle]` — `--mirror-cycle` ทำให้ได้ **8 เฟรม**
+> (ก้าวที่ 2 = ภาพสะท้อน สลับขานำ · ดู `walk-cycle-spec.md` ข้อ 2 · รันเนอร์ห้ามใช้)
 
 ```text
 2D game monster sprite sheet for "Monster Speller", frame-by-frame animation.

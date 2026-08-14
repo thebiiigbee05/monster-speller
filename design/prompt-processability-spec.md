@@ -114,8 +114,9 @@ NO extra characters, NO UI elements, NO background decoration.
 ```bash
 # 1 บรรทัดจบ: ตรวจก่อน (--require-check) → ผ่านจึงตัดเฟรม + manifest
 ./.venv-scripts/Scripts/python.exe scripts/ai-sprite-process.py <sheet.png> \
-    --name walker --cell 64 --out-dir out/ \
-    --grid-bg "#00ff00" --expect-grid 4x1 --require-check --drop-flat --dedupe
+    --name walker --cell 128 --out-dir out/ \
+    --grid-bg "#00ff00" --expect-grid 4x1 --pose-names contact,down,passing,up \
+    --require-check --drop-flat --dedupe --mirror-cycle   # 8 เฟรม (ก้าว 2 = mirror)
 
 # หรือตรวจอย่างเดียว (ไม่สร้างไฟล์)
 ./.venv-scripts/Scripts/python.exe scripts/ai-sprite-process.py <sheet.png> \
@@ -124,7 +125,7 @@ NO extra characters, NO UI elements, NO background decoration.
 
 | ตรวจ | วิธี | ผ่านเมื่อ |
 |---|---|---|
-| พื้นเป็นสีเดียวจริง | `--check` → กริด | กริดครบ 4×1 (แถวเดียว), เฟรม 4 |
+| พื้นเป็นสีเดียวจริง | `--check` → กริด | กริดครบ 4×1 (แถวเดียว), เฟรม 4 (หรือ 8 หลัง `--mirror-cycle`) |
 | ไม่มีเงา | `--check` → เงาตกค้าง | ไม่มี warn เงา |
 | กรอบตรง/ตรงพิทช์ | `--check` → กริด + ตัวติดขอบ | ตรง 4x1 + ไม่มี warn ติดขอบ |
 | ไม่มีเฟรมหลอก/ข้อความ | `--check` → เฟรมหลอก | ไม่มี error |

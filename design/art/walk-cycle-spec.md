@@ -3,15 +3,15 @@
 > **ใช้เมื่อ:** สั่ง AI วาดท่าเดิน/วิ่ง (เช่น พรอมต์ PEP `pep-prompts-monsters.md`)
 > หรือทีมกราฟิกตรวจว่าเฟรมเดินต่อเนื่องถูกต้องไหม
 >
-> **ปัญหาเดิม:** AI เคยวาด "4 ท่าแต่แปะซ้ำ" → เดินกระตุก 2 เฟรม (เจอจริงใน
-> walker-sheet 1254px). สเปกนี้บอก **ท่าต้องต่างกันยังไง + มุมขาเท่าไร** ให้ AI
-> วาดท่าต่อเนื่องจริงได้
+> **ปัญหาที่เคยเจอ:** AI วาด "4 ท่าแต่แปะซ้ำ" → เดินกระตุก 2 เฟรม (walker-sheet 1254px)
+> และ "4 ท่าใน 16 เซลล์" → เหลือ 2 ท่าจริง. สเปกนี้บอก **ท่าต้องต่างกันยังไง + มุมขาเท่าไร**
+> + **ทำยังไงให้ได้ 8 เฟรมลื่นไหลโดยไม่ต้องพึ่ง AI วาด 8 ท่า** (mirror — ดูข้อ 2)
 
 ---
 
-## 1. ท่าหลัก 4 ท่า (Walk Cycle ครึ่งก้าว — บังคับ)
+## 1. ท่าหลัก 4 ท่า (Walk Cycle ครึ่งก้าว — AI วาดแค่นี้)
 
-ทุกมอนสเตอร์ใช้ 4 ท่านี้เป็นแกน (เรียงซ้าย→ขวาในกริด 4×1):
+ทุกมอนสเตอร์ใช้ 4 ท่านี้เป็นแกน (เรียงซ้าย→ขวาในกริด 4×1 = ภาพ 512×128):
 
 | # | ท่า | ชื่อไทย | ลำตัว | ขาหน้า (ซ้าย) | ขาหลัง (ขวา) | เอกลักษณ์ |
 |---|---|---|---|---|---|---|
@@ -27,20 +27,36 @@
 
 ---
 
-## 2. ท่าเต็มก้าว 6 ท่า (Walk Cycle เต็มรอบ — ไม่บังคับ, เพิ่มเติมได้)
+## 2. รอบเต็ม 8 เฟรม (2 ก้าว — มาตรฐานความลื่นไหล) ⭐
 
-ถ้าต้องการอนิเมชันเนียนขึ้น (เช่น บอส/ตัวหลัก) ใช้ 6 ท่าต่อเนื่อง:
+**ทำไม 8:** เดินครบ 1 วง = 2 ก้าว (สลับขานำ). 4 ท่าหลัก = แค่ก้าวแรก → เดิน "กาง-หุบ" กระตุก
+รอบเต็ม 8 เฟรม (contact → down → passing → up × 2 ก้าว) ทำให้ขาเคลื่อนต่อเนื่องลื่น
 
-| # | ท่า | = ท่าหลักข้อ | หมายเหตุ |
-|---|---|---|---|
-| 1 | Contact L | 1 | ขาซ้ายแตะพื้นหน้า |
-| 2 | Down | 2 | หมอบ (ร่วม 2 ก้าว) |
-| 3 | Passing | 3 | ขาชิดใต้ตัว |
-| 4 | Contact R | 1 (สลับขา) | ขาขวาแตะพื้นหน้า |
-| 5 | Down | 2 | หมอบอีกครั้ง (สลับขา) |
-| 6 | Passing | 3 | ขาชิดใต้ตัว → วนกลับท่า 1 |
+**ก้าวที่ 2 = ภาพสะท้อน (mirror) ของก้าวแรก** — สลับขานำ (ซ้าย↔ขวา):
 
-> ใช้กริด **6×1 = ภาพ 768×128** (`--expect-grid 6x1`) ถ้าทำ 6 ท่า — สเปกที่เหลือเหมือนเดิม
+```
+เฟรม 0-3 (ก้าวที่ 1 — AI วาด)      เฟรม 4-7 (ก้าวที่ 2 — mirror โดยสคริปต์)
+contact-L  down-L  passing-L  up-L   contact-R  down-R  passing-R  up-R
+(ขาซ้ายนำ)                                (ขาขวานำ = สะท้อนเฟรม 0-3)
+```
+
+**วิธีสร้าง (อัตโนมัติ):** `ai-sprite-process.py --mirror-cycle`
+- AI วาด 4 ท่าหลัก (กริด 4×1 เหมือนเดิม) → สคริปต์ flip แนวนอนทุกเฟรม → ได้ **8 เฟรม** (`_00`–`_07`)
+- manifest: `poseMap` = 8 ชื่อ (`contact`, `down`, `passing`, `up`, `contact-R`, `down-R`, `passing-R`, `up-R`)
+- **การันตีได้ 8 เฟรมเสมอ** ไม่ต้องเสี่ยงให้ AI วาด 8 ท่า
+
+**⚠️ ห้าม mirror (ข้อยกเว้น):** ตัวละคร**ไม่สมมาตรซ้าย-ขวา** จะ mirror ไม่ได้ เพราะของเด่นจะไปอยู่อีกด้าน:
+| ตัว | สมมาตร? | mirror ได้ไหม |
+|---|---|---|
+| วอล์กเกอร์ | ✅ ตัวกลม + ตา/หนวดสมมาตร | ✅ ได้ — ใช้ `--mirror-cycle` ปกติ |
+| แทงก์ | ✅ ตัวกว้าง + หมุดทองกลางหัว | ✅ ได้ |
+| บอส | ✅ เขาทองโค้งออก 2 ข้างเท่ากัน | ✅ ได้ |
+| **รันเนอร์** | ❌ **ครีบหลัง + เอียง 15°** (ไม่สมมาตร) | ❌ **ห้าม mirror** (ครีบจะไปอยู่ด้านหน้า) — ต้องวาด 8 ท่าจริง หรือใช้ 4 ท่า |
+
+**ทางเลือกสำหรับ AI ที่วาด 8 ท่าได้จริง** (ไม่ต้อง mirror): ใช้กริด **8×1 = ภาพ 1024×128**
+(`--expect-grid 8x1 --pose-names contact,down,passing,up,contact-R,down-R,passing-R,up-R`)
+— เซลล์ 5-8 = ท่าของก้าวที่ 2 (ขาอีกข้างนำ แต่**หน้ายังหันขวาเหมือนเดิม** — ห้ามวาดแบบ mirror ทื่อ ๆ)
+ถ้าได้ < 8 ท่าหลัง `--dedupe` → สคริปต์เตือน `ท่าไม่ครบ` — ใช้ `--mirror-cycle` แทน
 
 ---
 
@@ -52,6 +68,7 @@
 4. **ตา/ปาก/หน้า** เปลี่ยนเล็กน้อยต่อท่าได้ (กระพริบ/เบะ) แต่**ห้ามเปลี่ยนเอกลักษณ์** (สี/หนวด/เขา/หมุด)
 5. **ตัวต้องอยู่กลางเซลล์** + ห่างขอบ ≥ 8px ทุกท่า (กัน `--check` ฟลากติดขอบ)
 6. **ห้ามเงาใต้เท้า** (พื้น `#00ff00` ล้วน — ตามสัญญา PEP)
+7. **พอ mirror แล้ว** ท่าที่ 5-8 ต้องดูเป็น "ก้าวถัดไป" ไม่ใช่ "เดินถอยหลัง" — ตัวสมมาตร (วอล์กเกอร์/แทงก์/บอส) ไม่มีปัญหา
 
 ---
 
@@ -69,7 +86,8 @@
   ขาหลังลาก)        ขาเกือบชิด)        ขาหลังตั้งฉาก)      ขาหลังเหยียด)
 ```
 
-> ภาพประกอบเป็นแผนผัง — ตัวจริงวาดตาม Character Bible (สัดส่วน/สีของแต่ละตัว)
+> เฟรม 5-8 (mirror) = สลับซ้าย-ขวาของ 4 ท่านี้ — ภาพประกอบเป็นแผนผัง
+> ตัวจริงวาดตาม Character Bible (สัดส่วน/สีของแต่ละตัว)
 
 ---
 
@@ -79,17 +97,24 @@
 VIEW: SIDE VIEW (profile), character faces RIGHT. Never front/back view.
 
 WALK CYCLE (MUST follow exactly):
-- Draw exactly 4 DISTINCT walking poses in order: 1) CONTACT (front leg
-  straight forward ~30 degrees, back leg trailing ~20 degrees, body mid
-  height), 2) DOWN (body lowest, both knees bent ~45 degrees), 3) PASSING
-  (front leg lifted ~60 degrees bent, back leg straight under body 90
-  degrees, legs nearly together), 4) UP (body highest, front leg raised
-  ~70 degrees bent 90, back leg trailing ~10 degrees, body leaning forward).
+- Draw exactly 4 DISTINCT walking poses in order — these are the FIRST
+  step of a 2-step walk cycle (the pipeline will mirror them to build the
+  second step: opposite leg leading, 8 frames total):
+  1) CONTACT (front leg straight forward ~30 degrees, back leg trailing
+  ~20 degrees, body mid height), 2) DOWN (body lowest, both knees bent
+  ~45 degrees), 3) PASSING (front leg lifted ~60 degrees bent, back leg
+  straight under body 90 degrees, legs nearly together), 4) UP (body
+  highest, front leg raised ~70 degrees bent 90, back leg trailing ~10
+  degrees, body leaning forward).
 - Every pose MUST look clearly different from the others (leg angle, body
   height and foot position all change). NO duplicate poses, NO copying the
   same pose into multiple cells.
 - Legs alternate (left, right, left, right). Body moves up-down like a wave
   (mid, low, mid, high). Antennae/arms swing opposite to the front leg.
+- IMPORTANT: the character body/face must be LEFT-RIGHT symmetric around
+  its center (both antennae/rivets/horns visible, eyes centered) so the
+  mirrored second step looks natural. (Runner: draw 8 real poses instead —
+  see pep-prompts-monsters.md.)
 ```
 
 ---
@@ -98,9 +123,11 @@ WALK CYCLE (MUST follow exactly):
 
 | ตรวจ | วิธี | ผ่านเมื่อ |
 |---|---|---|
-| มีครบ 4 ท่า | `--dedupe` | เหลือ 4 ท่า (ไม่โดนลบ) |
-| ท่าต่างกันจริง | เปิด `_00.png`–`_03.png` เทียบ | แต่ละท่ามุมขา/ความสูงต่างชัด |
-| เรียงลำดับถูก | ดูทิศขา | Contact→Down→Passing→Up ไม่สลับ |
+| มีครบ 4 ท่าหลัก | `--dedupe` | เหลือ 4 ท่า (ไม่โดนลบ) |
+| ได้ครบ 8 เฟรม | `--mirror-cycle` | manifest `frames: 8` + `poseMap` มี 8 ชื่อ |
+| ท่าต่างกันจริง | เปิด `_00.png`–`_07.png` เทียบ | ท่า 0-3 มุมขา/ความสูงต่างชัด · ท่า 4-7 = mirror ของ 0-3 |
+| mirror ไม่เพี้ยน | เทียบ `_04` กับ `_00` (flip) | เหมือนกันระดับพิกเซล (เฉพาะตัวสมมาตร) |
+| เรียงลำดับถูก | ดูทิศขา | Contact→Down→Passing→Up ไม่สลับ (ทั้ง 2 ก้าว) |
 | ตัวกลางเซลล์ | `--check` | ไม่มี warn ติดขอบ |
 | ไม่มีเงา/ซ้ำ | `--drop-flat --dedupe` | ไม่มีรายงานลบเงา/ซ้ำเกินควร |
 
@@ -108,16 +135,16 @@ WALK CYCLE (MUST follow exactly):
 
 ## 7. ท่าเฉพาะตัว (Gait ต่างกันตามบุคลิก — ดู Character Bible แต่ละตัว)
 
-| มอนสเตอร์ | gait | จุดเด่นที่ต้องเห็นในท่า |
-|---|---|---|
-| **วอล์กเกอร์** | เดินเงอะงะ ขากางกว้าง | ตัวโยกซ้าย-ขวา · หนวดสะบัด |
-| **รันเนอร์** | วิ่งเร็ว เอียง 15° | ขายกสูง · รองเท้าขาวสะดุดตา · ครีบหลังสั่น |
-| **แทงก์** | เดินโยกตัวหนัก (waddle) | ตัวเอียงทั้งตัวซ้าย/ขวา · ขาสั้นแทบไม่พ้นพื้น |
-| **บอส** | กระทืบยักษ์ (stomp) | ก้าวกว้าง · เขาไม่หลุดกรอบ · ลำตัวลง-ขึ้นชัด |
+| มอนสเตอร์ | gait | จุดเด่นที่ต้องเห็นในท่า | mirror 8 เฟรม? |
+|---|---|---|---|
+| **วอล์กเกอร์** | เดินเงอะงะ ขากางกว้าง | ตัวโยกซ้าย-ขวา · หนวดสะบัด | ✅ ได้ |
+| **รันเนอร์** | วิ่งเร็ว เอียง 15° | ขายกสูง · รองเท้าขาวสะดุดตา · ครีบหลังสั่น | ❌ ไม่ได้ (ครีบหลัง) |
+| **แทงก์** | เดินโยกตัวหนัก (waddle) | ตัวเอียงทั้งตัวซ้าย/ขวา · ขาสั้นแทบไม่พ้นพื้น | ✅ ได้ |
+| **บอส** | กระทืบยักษ์ (stomp) | ก้าวกว้าง · เขาไม่หลุดกรอบ · ลำตัวลง-ขึ้นชัด | ✅ ได้ |
 
 > รายละเอียดเต็มของแต่ละตัว (สี/สัดส่วน/เอกลักษณ์) อยู่ใน `character-bibles/<name>.md`
 
 ---
 
-*สเปกกลาง — อ้างอิงจากหลักแอนิเมชัน walk cycle (12 หลักการ) + บทเรียนจริงจาก AI ·
-สิงหาคม 2569*
+*สเปกกลาง — อ้างอิงจากหลักแอนิเมชัน walk cycle (12 หลักการ) + บทเรียนจริงจาก AI ·*
+*สิงหาคม 2569 · v1.1 เพิ่มรอบเต็ม 8 เฟรม (mirror) — กันเดินกระตุกโดยไม่พึ่ง AI วาด 8 ท่า*

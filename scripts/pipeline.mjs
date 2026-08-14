@@ -26,11 +26,12 @@ const OUT_DIR = 'public/assets/sprites/ai';
 
 /** แผนงานสินทรัพย์ — เพิ่ม/แก้ตรงนี้ได้ (name = ชื่อ manifest, cell, grid) */
 const PLANS = [
-  // poses = ชื่อท่าเรียงตามกริด (อิง pep-prompts-monsters.md §ท่าทาง)
-  { name: 'walker', cell: 128, grid: '4x1', poses: 'contact,down,passing,up' },
-  { name: 'runner', cell: 128, grid: '4x1', poses: 'reach,stride,passing,kick' },
-  { name: 'tank',   cell: 128, grid: '4x1', poses: 'sway-left,squat,sway-right,rise' },
-  { name: 'boss',   cell: 128, grid: '4x1', poses: 'stomp-left,low,stomp-right,high' },
+  // poses = ชื่อท่าเรียงตามกริด · mirror = สร้างก้าวที่ 2 (ภาพสะท้อน) → 8 เฟรมลื่น
+  // (runner ห้าม mirror — ครีบหลังไม่สมมาตร ดู walk-cycle-spec.md ข้อ 2)
+  { name: 'walker', cell: 128, grid: '4x1', poses: 'contact,down,passing,up', mirror: true },
+  { name: 'runner', cell: 128, grid: '4x1', poses: 'reach,stride,passing,kick', mirror: false },
+  { name: 'tank',   cell: 128, grid: '4x1', poses: 'sway-left,squat,sway-right,rise', mirror: true },
+  { name: 'boss',   cell: 128, grid: '4x1', poses: 'stomp-left,low,stomp-right,high', mirror: true },
 ];
 
 function runProcess(args, cwd = process.cwd()) {
@@ -90,6 +91,7 @@ async function main() {
       '--grid-bg', '#00ff00',
       '--expect-grid', p.grid,
       '--pose-names', p.poses,
+      ...(p.mirror ? ['--mirror-cycle'] : []),
       '--require-check', '--drop-flat', '--dedupe',
     ];
     const r = await runProcess(args);
